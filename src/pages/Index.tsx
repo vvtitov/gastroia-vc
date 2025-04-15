@@ -9,19 +9,21 @@ const Index = () => {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <header className="bg-gastro text-white">
+      <header className="bg-gastro min-h-screen flex flex-col">
         <div className="container mx-auto px-4 py-6">
           <nav className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <div className="bg-white rounded-md p-1.5">
                 <Bot className="h-5 w-5 text-gastro" />
               </div>
-              <span className="font-bold text-xl">GastroIA</span>
+              <span className="font-bold text-xl text-white">GastroIA</span>
             </div>
             <div className="flex gap-4 items-center">
-              <Link to="/auth/login" className="hover:underline text-sm lg:text-base">Iniciar sesión</Link>
+              <Link to="/auth/login" className="text-white hover:text-white/90 text-sm lg:text-base">
+                Iniciar sesión
+              </Link>
               <Link to="/auth/register">
-                <Button variant="ghost" className="hover:bg-gastro-light">
+                <Button variant="secondary" className="bg-white text-gastro hover:bg-white/90">
                   Registrarse
                 </Button>
               </Link>
@@ -29,44 +31,46 @@ const Index = () => {
           </nav>
         </div>
 
-        <div className="container mx-auto px-4 py-16 lg:py-24 flex flex-col lg:flex-row items-center">
-          <div className="lg:w-1/2 lg:pr-12 mb-8 lg:mb-0">
-            <h1 className="text-3xl lg:text-5xl font-bold mb-4 leading-tight">
-              Inteligencia artificial para tu negocio gastronómico
-            </h1>
-            <p className="text-lg lg:text-xl mb-8 text-white/80">
-              Automatiza procesos, mejora la experiencia de tus clientes y optimiza la gestión de tu restaurante o bar con IA.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/auth/register">
-                <Button className="bg-white text-gastro hover:bg-white/90 w-full sm:w-auto shadow-lg">
-                  Comenzar gratis
-                  <ArrowRight className="ml-2 h-4 w-4" />
+        <div className="flex-1 container mx-auto px-4 flex items-center">
+          <div className="grid lg:grid-cols-2 gap-12 items-center py-12">
+            <div className="space-y-8">
+              <h1 className="text-4xl lg:text-6xl font-bold text-white leading-tight">
+                Inteligencia artificial para tu negocio gastronómico
+              </h1>
+              <p className="text-xl text-white/80 leading-relaxed">
+                Automatiza procesos, mejora la experiencia de tus clientes y optimiza la gestión de tu restaurante o bar con IA.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link to="/auth/register">
+                  <Button size="lg" className="bg-white text-gastro hover:bg-white/90 w-full sm:w-auto">
+                    Comenzar gratis
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 w-full sm:w-auto">
+                  Ver demo
                 </Button>
-              </Link>
-              <Button variant="outline" className="border-white hover:bg-gastro-light w-full sm:w-auto">
-                Ver demo
-              </Button>
+              </div>
             </div>
-          </div>
-          <div className="lg:w-1/2 flex justify-center">
-            <div className="bg-white rounded-xl shadow-xl p-4 max-w-md">
-              <div className="bg-gastro-bg p-4 rounded-lg">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="bg-gastro rounded-full p-1">
-                    <Bot className="h-4 w-4 text-white" />
+            <div className="lg:justify-self-end max-w-xl w-full">
+              <div className="bg-white rounded-xl shadow-2xl p-6">
+                <div className="bg-gastro-bg p-4 rounded-lg">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="bg-gastro rounded-full p-1">
+                      <Bot className="h-4 w-4 text-white" />
+                    </div>
+                    <div className="text-sm font-medium">GastroBot</div>
                   </div>
-                  <div className="text-sm font-medium">GastroBot</div>
-                </div>
-                <div className="bg-white p-3 rounded-lg text-gastro-text mb-3">
-                  Hola, bienvenido a La Trattoria. ¿En qué puedo ayudarte hoy?
-                </div>
-                <div className="bg-gastro float-right text-white p-3 rounded-lg mb-3 max-w-[80%]">
-                  Me gustaría ver el menú
-                </div>
-                <div className="clear-both"></div>
-                <div className="bg-white p-3 rounded-lg text-gastro-text">
-                  ¡Por supuesto! Aquí tienes nuestro menú de hoy. Te recomiendo especialmente la pasta del día y el tiramisú para postre.
+                  <div className="bg-white p-3 rounded-lg text-gastro-text mb-3">
+                    Hola, bienvenido a La Trattoria. ¿En qué puedo ayudarte hoy?
+                  </div>
+                  <div className="bg-gastro float-right text-white p-3 rounded-lg mb-3 max-w-[80%]">
+                    Me gustaría ver el menú
+                  </div>
+                  <div className="clear-both"></div>
+                  <div className="bg-white p-3 rounded-lg text-gastro-text">
+                    ¡Por supuesto! Aquí tienes nuestro menú de hoy. Te recomiendo especialmente la pasta del día y el tiramisú para postre.
+                  </div>
                 </div>
               </div>
             </div>
