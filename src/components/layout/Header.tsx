@@ -11,12 +11,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+  onMenuClick?: () => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   return (
     <header className="border-b border-border bg-white py-4 px-6">
       <div className="flex items-center justify-between">
         <div className="flex md:hidden">
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" onClick={onMenuClick}>
             <Menu size={20} />
           </Button>
         </div>

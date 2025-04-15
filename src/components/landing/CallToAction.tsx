@@ -23,7 +23,7 @@ const CallToAction = () => {
           <Button 
             variant="outline" 
             size="lg" 
-            className="border-white text-white hover:bg-white/20 w-full sm:w-auto"
+            className="border-white text-white bg-primary hover:bg-white/20 w-full sm:w-auto"
           >
             Contactar ventas
           </Button>

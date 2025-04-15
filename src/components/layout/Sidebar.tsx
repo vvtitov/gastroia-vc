@@ -20,9 +20,10 @@ interface SidebarLinkProps {
   icon: React.ReactNode;
   label: string;
   isActive: boolean;
+  setOpen?: (open: boolean) => void;
 }
 
-const SidebarLink: React.FC<SidebarLinkProps> = ({ to, icon, label, isActive }) => {
+const SidebarLink: React.FC<SidebarLinkProps> = ({ to, icon, label, isActive, setOpen }) => {
   return (
     <Link
       to={to}
@@ -32,6 +33,9 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({ to, icon, label, isActive }) 
           ? "bg-sidebar-accent text-sidebar-accent-foreground"
           : "text-sidebar-foreground hover:bg-sidebar-accent/50"
       )}
+      onClick={() => {
+        if (typeof window !== 'undefined' && window.innerWidth < 768 && typeof setOpen === 'function') setOpen(false);
+      }}
     >
       {icon}
       <span>{label}</span>
@@ -39,7 +43,12 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({ to, icon, label, isActive }) 
   );
 };
 
-export const Sidebar: React.FC = () => {
+interface SidebarProps {
+  open?: boolean;
+  setOpen?: (open: boolean) => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
   const location = useLocation();
   const pathname = location.pathname;
 
@@ -55,8 +64,20 @@ export const Sidebar: React.FC = () => {
     { to: "/settings", icon: <Settings size={20} />, label: "Configuración" },
   ];
 
+  // Drawer para mobile
   return (
-    <aside className="w-64 bg-sidebar hidden md:flex flex-col h-screen">
+    <>
+      {/* Drawer en mobile */}
+      <div
+        className={`fixed inset-0 z-40 bg-black/40 transition-opacity ${open ? 'block md:hidden' : 'hidden'}`}
+        onClick={() => setOpen && setOpen(false)}
+        aria-hidden={!open}
+      />
+      <aside
+        className={`fixed z-50 top-0 left-0 h-full w-64 bg-sidebar transform transition-transform duration-200 flex flex-col ${open ? 'translate-x-0' : '-translate-x-full'} md:static md:flex md:translate-x-0 ${open ? '' : 'hidden'} md:block`}
+        style={{ boxShadow: open ? '0 0 0 9999px rgba(0,0,0,0.4)' : undefined }}
+        onClick={e => e.stopPropagation()}
+      >
       <div className="p-4">
         <div className="flex items-center gap-2 px-2">
           <div className="w-8 h-8 rounded-md flex items-center justify-center bg-white">
@@ -74,6 +95,7 @@ export const Sidebar: React.FC = () => {
             icon={link.icon}
             label={link.label}
             isActive={pathname === link.to}
+            setOpen={setOpen}
           />
         ))}
       </nav>
@@ -87,5 +109,6 @@ export const Sidebar: React.FC = () => {
         />
       </div>
     </aside>
+    </>
   );
 };
