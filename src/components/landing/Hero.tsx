@@ -21,13 +21,15 @@ const Hero = () => {
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
-          <Button 
-            size="lg" 
-            variant="outline" 
-            className="border-white text-white hover:bg-white/20 w-full sm:w-auto"
-          >
-            Ver demo
-          </Button>
+          <Link to="/dashboard">
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="border-white text-white hover:bg-white/20 w-full sm:w-auto bg-blue-500"
+            >
+              Ver demo
+            </Button>
+          </Link>
         </div>
       </div>
       <div className="lg:justify-self-end max-w-xl w-full">

@@ -63,13 +63,6 @@ export const ChatbotPreview: React.FC = () => {
             timestamp="12:31 PM"
           />
         </div>
-        <div className="border rounded-md p-2 text-sm text-gastro-text-light">
-          El cliente puede escanear el código QR para interactuar con GastroBot en cualquier mesa
-        </div>
-        <Button className="w-full mt-3" variant="outline">
-          <Bot className="mr-2 h-4 w-4" />
-          Ver demostracion del chatbot
-        </Button>
       </CardContent>
     </Card>
   );
