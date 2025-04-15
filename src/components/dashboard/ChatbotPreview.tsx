@@ -32,7 +32,7 @@ const ChatMessage: React.FC<{
 
 export const ChatbotPreview: React.FC = () => {
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="flex flex-col h-[250px] sm:h-full">
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
           <CardTitle className="text-base font-medium flex items-center gap-2">
@@ -45,7 +45,7 @@ export const ChatbotPreview: React.FC = () => {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 overflow-hidden flex flex-col">
+      <CardContent className="flex-1 overflow-hidden flex flex-col max-h-[180px] sm:max-h-none">
         <div className="flex-1 overflow-y-auto mb-3 space-y-2">
           <ChatMessage 
             content="Hola, soy GastroBot. ¿En qué puedo ayudarte hoy?" 

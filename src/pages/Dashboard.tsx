@@ -51,7 +51,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="mt-8">
+        <div className="mt-10 pt-2">
           <OrdersTable />
         </div>
       </div>
