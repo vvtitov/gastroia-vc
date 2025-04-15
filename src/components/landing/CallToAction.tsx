@@ -2,6 +2,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
 const CallToAction = () => {
   return (
@@ -12,12 +13,13 @@ const CallToAction = () => {
           Únete a los cientos de negocios que están optimizando sus operaciones con GastroIA.
         </p>
         <div className="flex justify-center gap-4 flex-wrap">
-          <Link to="/auth/register">
+          <Link to="/auth/register" className="w-full sm:w-auto">
             <Button 
               size="lg" 
               className="bg-white text-gastro hover:bg-white/90 w-full sm:w-auto"
             >
               Comenzar ahora
+              <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
           <Button 

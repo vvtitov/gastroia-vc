@@ -67,8 +67,9 @@ export const SalesChart: React.FC = () => {
         </Select>
       </CardHeader>
       <CardContent className="pt-0">
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
+        <ResponsiveContainer width="100%" height={250} className="mt-2">
+
+          <BarChart data={data} margin={{ top: 20, right: 0, left: -20, bottom: 0 }} className="text-xs sm:text-sm">
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
             <XAxis dataKey="name" tickLine={false} axisLine={false} />
             <YAxis 
@@ -84,7 +85,7 @@ export const SalesChart: React.FC = () => {
               dataKey="ventas" 
               fill="#3182FF" 
               radius={[4, 4, 0, 0]}
-              barSize={30} 
+              barSize={period === "daily" ? 20 : 30}
             />
           </BarChart>
         </ResponsiveContainer>

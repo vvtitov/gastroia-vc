@@ -20,10 +20,10 @@ const ChatMessage: React.FC<{
         {sender === "bot" ? <Bot size={16} /> : <User size={16} />}
       </div>
       <div className={cn(
-        "rounded-lg p-3 max-w-[80%]",
+        "rounded-lg p-2 sm:p-3 max-w-[85%] sm:max-w-[80%]",
         sender === "bot" ? "bg-muted" : "bg-gastro text-white"
       )}>
-        <p className="text-sm">{content}</p>
+        <p className="text-xs sm:text-sm">{content}</p>
         <span className="text-xs opacity-70 mt-1 block text-right">{timestamp}</span>
       </div>
     </div>

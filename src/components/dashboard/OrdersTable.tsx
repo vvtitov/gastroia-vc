@@ -106,7 +106,7 @@ export const OrdersTable: React.FC = () => {
           Ver todos <ChevronDown className="ml-1 h-4 w-4" />
         </button>
       </div>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto -mx-4 sm:mx-0">
         <Table>
           <TableHeader>
             <TableRow>
@@ -127,7 +127,7 @@ export const OrdersTable: React.FC = () => {
                   <TableCell className="font-medium">{order.id}</TableCell>
                   <TableCell>{order.customer}</TableCell>
                   <TableCell>{order.time}</TableCell>
-                  <TableCell className="max-w-[200px] truncate" title={order.items}>
+                  <TableCell className="max-w-[120px] md:max-w-[200px] truncate" title={order.items}>
                     {order.items}
                   </TableCell>
                   <TableCell>{order.total}</TableCell>
