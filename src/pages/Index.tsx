@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -47,7 +46,11 @@ const Index = () => {
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 w-full sm:w-auto">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-white text-white hover:bg-white/20 w-full sm:w-auto"
+                >
                   Ver demo
                 </Button>
               </div>
@@ -238,20 +241,27 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Call to Action */}
+      {/* Call to Action Section */}
       <section className="py-24 bg-gradient-to-br from-gastro to-gastro-dark text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">¿Listo para transformar tu negocio?</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto text-white/80">
-            Únete a los cientos de negocios que ya están optimizando sus operaciones con GastroIA.
+            Únete a los cientos de negocios que están optimizando sus operaciones con GastroIA.
           </p>
           <div className="flex justify-center gap-4 flex-wrap">
             <Link to="/auth/register">
-              <Button size="lg" className="bg-white text-gastro hover:bg-white/90">
+              <Button 
+                size="lg" 
+                className="bg-white text-gastro hover:bg-white/90 w-full sm:w-auto"
+              >
                 Comenzar ahora
               </Button>
             </Link>
-            <Button variant="outline" size="lg" className="border-white hover:bg-white/10">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="border-white text-white hover:bg-white/20 w-full sm:w-auto"
+            >
               Contactar ventas
             </Button>
           </div>
