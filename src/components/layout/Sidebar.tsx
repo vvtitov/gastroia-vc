@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -13,9 +12,12 @@ import {
   Store, 
   ChefHat, 
   LogOut,
-  CreditCard
+  CreditCard,
+  ShoppingBag
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 
 interface SidebarLinkProps {
   to: string;
@@ -53,19 +55,79 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
   const location = useLocation();
   const pathname = location.pathname;
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
+  const [userType, setUserType] = useState<string>('business');
+  const [isDemo, setIsDemo] = useState(false);
+  const [demoType, setDemoType] = useState<string>('business');
 
-  const links = [
+  useEffect(() => {
+    const fetchUserType = async () => {
+      // Check for demo mode
+      const urlParams = new URLSearchParams(window.location.search);
+      const demo = urlParams.get('demo');
+      
+      if (demo === 'true') {
+        setIsDemo(true);
+        const type = urlParams.get('type');
+        setDemoType(type || 'business');
+        return;
+      }
+
+      // Otherwise check real user type
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('user_type')
+          .eq('id', user.id)
+          .single();
+        
+        if (!error && data) {
+          setUserType(data.user_type);
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    };
+    
+    fetchUserType();
+  }, [user, location.search]);
+  
+  // Determine which type to use
+  const effectiveUserType = isDemo ? demoType : userType;
+
+  // Common links for both business and provider
+  const commonLinks = [
     { to: "/dashboard", icon: <LayoutDashboard size={20} />, label: "Dashboard" },
+    { to: "/messages", icon: <MessageSquare size={20} />, label: "Mensajes" },
+    { to: "/analytics", icon: <BarChart3 size={20} />, label: "Estadísticas" },
+    { to: "/settings", icon: <Settings size={20} />, label: "Configuración" },
+  ];
+
+  // Business specific links
+  const businessLinks = [
     { to: "/orders", icon: <ShoppingCart size={20} />, label: "Pedidos" },
     { to: "/cashier", icon: <CreditCard size={20} />, label: "Caja" },
     { to: "/stock", icon: <PackageOpen size={20} />, label: "Inventario" },
     { to: "/employees", icon: <Users size={20} />, label: "Empleados" },
     { to: "/kitchen", icon: <ChefHat size={20} />, label: "Cocina" },
-    { to: "/chat", icon: <MessageSquare size={20} />, label: "Chatbot" },
-    { to: "/analytics", icon: <BarChart3 size={20} />, label: "Estadísticas" },
+    { to: "/marketplace", icon: <ShoppingBag size={20} />, label: "Marketplace" },
     { to: "/business", icon: <Store size={20} />, label: "Mi Negocio" },
-    { to: "/settings", icon: <Settings size={20} />, label: "Configuración" },
+  ];
+
+  // Provider specific links
+  const providerLinks = [
+    { to: "/orders", icon: <ShoppingCart size={20} />, label: "Pedidos" },
+    { to: "/products", icon: <PackageOpen size={20} />, label: "Productos" },
+    { to: "/business", icon: <Store size={20} />, label: "Mi Empresa" },
+  ];
+
+  // Choose links based on user type
+  const links = [
+    ...commonLinks,
+    ...(effectiveUserType === 'business' ? businessLinks : []),
+    ...(effectiveUserType === 'provider' ? providerLinks : []),
   ];
 
   // Drawer para mobile

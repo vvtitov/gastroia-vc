@@ -21,15 +21,24 @@ const Hero = () => {
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
-          <Link to="/dashboard">
+          <div className="dropdown">
             <Button 
               size="lg" 
               variant="outline" 
-              className="border-white text-white hover:bg-white/20 w-full sm:w-auto bg-blue-500"
+              className="border-white text-white hover:bg-white/20 w-full sm:w-auto bg-blue-500 dropdown-toggle"
+              onClick={() => document.getElementById('demo-dropdown')?.classList.toggle('hidden')}
             >
               Ver demo
             </Button>
-          </Link>
+            <div id="demo-dropdown" className="hidden absolute mt-2 w-auto bg-white rounded-md shadow-lg z-10">
+              <Link to="/dashboard?demo=true&type=business" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                Demo Negocio
+              </Link>
+              <Link to="/dashboard?demo=true&type=provider" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                Demo Proveedor
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
       <div className="lg:justify-self-end max-w-xl w-full">

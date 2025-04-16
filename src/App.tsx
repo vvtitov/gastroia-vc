@@ -20,6 +20,9 @@ import Business from "./pages/Business";
 import Settings from "./pages/Settings";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
+import Messages from "./pages/Messages";
+import MarketPlace from "./pages/MarketPlace";
+import Products from "./pages/Products";
 
 const queryClient = new QueryClient();
 
@@ -112,6 +115,30 @@ const App = () => (
               element={
                 <AuthGuard>
                   <Settings />
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/messages" 
+              element={
+                <AuthGuard>
+                  <Messages />
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/marketplace" 
+              element={
+                <AuthGuard>
+                  <MarketPlace />
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/products" 
+              element={
+                <AuthGuard>
+                  <Products />
                 </AuthGuard>
               } 
             />

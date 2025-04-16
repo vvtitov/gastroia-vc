@@ -1,6 +1,5 @@
-
 import React, { useEffect } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 
 interface AuthGuardProps {
@@ -10,8 +9,29 @@ interface AuthGuardProps {
 const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
-  // Si está cargando, mostrar un spinner o nada
+  // Check if this is a demo route
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const isDemo = urlParams.get('demo') === 'true';
+    
+    // If it's a demo, we don't need to redirect
+    if (isDemo) return;
+    
+    // Otherwise check for authentication
+    if (!loading && !user) {
+      navigate('/auth/login', { state: { from: location }, replace: true });
+    }
+  }, [user, loading, location, navigate]);
+
+  // If it's a demo route, render children regardless of authentication
+  const isDemo = new URLSearchParams(location.search).get('demo') === 'true';
+  if (isDemo) {
+    return <>{children}</>;
+  }
+
+  // Regular authentication flow
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -20,12 +40,11 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     );
   }
 
-  // Si no hay usuario autenticado, redirigir al login
   if (!user) {
+    // The navigate in useEffect will handle redirection, but this is a fallback
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 
-  // Si hay usuario, renderizar los hijos
   return <>{children}</>;
 };
 
