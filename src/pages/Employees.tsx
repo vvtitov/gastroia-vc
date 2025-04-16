@@ -17,6 +17,7 @@ import { UserPlus, Calendar, Clock, Search, PlusCircle, Calendar as CalendarIcon
 import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/use-auth";
 
 const weekDays = [
   { value: 0, label: "Domingo", shortLabel: "Dom" },
@@ -29,6 +30,7 @@ const weekDays = [
 ];
 
 const Employees = () => {
+  const { user } = useAuth();
   const isMobile = useIsMobile();
   const [employees, setEmployees] = useState([]);
   const [shifts, setShifts] = useState([]);
@@ -73,6 +75,7 @@ const Employees = () => {
       const { data, error } = await supabase
         .from('employees')
         .select('*')
+        .eq('business_id', user?.id)  // Filter by business_id
         .order('name');
       
       if (error) throw error;
@@ -94,6 +97,7 @@ const Employees = () => {
       const { data, error } = await supabase
         .from('shifts')
         .select('*')
+        .eq('business_id', user?.id)  // Filter by business_id
         .order('start_time');
       
       if (error) throw error;
@@ -113,6 +117,7 @@ const Employees = () => {
           employees (id, name),
           shifts (id, name, start_time, end_time)
         `)
+        .eq('business_id', user?.id)  // Filter by business_id
         .order('day_of_week');
       
       if (error) throw error;
@@ -126,7 +131,10 @@ const Employees = () => {
     try {
       const { error } = await supabase
         .from('employees')
-        .insert([data]);
+        .insert([{
+          ...data,
+          business_id: user?.id
+        }]);
       
       if (error) throw error;
       
@@ -152,7 +160,10 @@ const Employees = () => {
     try {
       const { error } = await supabase
         .from('employee_schedules')
-        .insert([data]);
+        .insert([{
+          ...data,
+          business_id: user?.id
+        }]);
       
       if (error) throw error;
       
@@ -179,7 +190,8 @@ const Employees = () => {
       const { error } = await supabase
         .from('employee_schedules')
         .delete()
-        .eq('id', scheduleId);
+        .eq('id', scheduleId)
+        .eq('business_id', user?.id);
       
       if (error) throw error;
       

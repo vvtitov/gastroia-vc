@@ -9,6 +9,92 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      employee_schedules: {
+        Row: {
+          business_id: string
+          created_at: string | null
+          day_of_week: number
+          employee_id: string
+          end_time: string
+          id: string
+          start_time: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string | null
+          day_of_week: number
+          employee_id: string
+          end_time: string
+          id?: string
+          start_time: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string | null
+          day_of_week?: number
+          employee_id?: string
+          end_time?: string
+          id?: string
+          start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_schedules_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_schedules_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          active: boolean | null
+          business_id: string
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          position: string
+        }
+        Insert: {
+          active?: boolean | null
+          business_id: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          position: string
+        }
+        Update: {
+          active?: boolean | null
+          business_id?: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          position?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string
@@ -227,6 +313,86 @@ export type Database = {
           user_type?: Database["public"]["Enums"]["user_type"]
         }
         Relationships: []
+      }
+      shifts: {
+        Row: {
+          business_id: string
+          created_at: string | null
+          employee_id: string
+          end_time: string | null
+          id: string
+          start_time: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string | null
+          employee_id: string
+          end_time?: string | null
+          id?: string
+          start_time: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string | null
+          employee_id?: string
+          end_time?: string | null
+          id?: string
+          start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shifts_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shifts_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          amount: number
+          business_id: string
+          created_at: string | null
+          description: string | null
+          id: string
+          payment_method: string
+          transaction_type: string
+        }
+        Insert: {
+          amount: number
+          business_id: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          payment_method: string
+          transaction_type: string
+        }
+        Update: {
+          amount?: number
+          business_id?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          payment_method?: string
+          transaction_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

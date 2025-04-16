@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -14,8 +13,10 @@ import { toast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useAuth } from "@/hooks/use-auth";
 
 const Cashier = () => {
+  const { user } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totals, setTotals] = useState({ income: 0, expenses: 0, balance: 0 });
@@ -30,6 +31,7 @@ const Cashier = () => {
       const { data, error } = await supabase
         .from('transactions')
         .select('*')
+        .eq('business_id', user?.id)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -51,7 +53,7 @@ const Cashier = () => {
   const calculateTotals = (transactions) => {
     const totals = transactions.reduce(
       (acc, transaction) => {
-        if (transaction.transaction_type === 'ingreso') {
+        if (transaction.transaction_type === 'income') {
           acc.income += parseFloat(transaction.amount);
         } else {
           acc.expenses += parseFloat(transaction.amount);
@@ -67,12 +69,12 @@ const Cashier = () => {
 
   const handleNewTransaction = async (type) => {
     try {
-      // En una implementación real, aquí se abriría un modal para recoger los detalles
       const mockTransaction = {
-        amount: type === 'ingreso' ? 150.00 : 50.00,
+        amount: type === 'income' ? 150.00 : 50.00,
         transaction_type: type,
-        payment_method: 'efectivo',
-        description: `${type === 'ingreso' ? 'Venta' : 'Compra'} de prueba`,
+        payment_method: 'cash',
+        description: `${type === 'income' ? 'Venta' : 'Compra'} de prueba`,
+        business_id: user?.id
       };
       
       const { data, error } = await supabase
@@ -87,7 +89,6 @@ const Cashier = () => {
         description: `La transacción se ha registrado correctamente`,
       });
       
-      // Refrescar lista
       fetchTransactions();
       
     } catch (error) {
@@ -127,11 +128,11 @@ const Cashier = () => {
             <p className="text-muted-foreground">Gestiona los ingresos y egresos de tu negocio</p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => handleNewTransaction('ingreso')} variant="default">
+            <Button onClick={() => handleNewTransaction('income')} variant="default">
               <BadgePlus className="mr-2 h-4 w-4" />
               Nuevo Ingreso
             </Button>
-            <Button onClick={() => handleNewTransaction('egreso')} variant="outline">
+            <Button onClick={() => handleNewTransaction('expense')} variant="outline">
               <BadgeMinus className="mr-2 h-4 w-4" />
               Nuevo Egreso
             </Button>
@@ -215,12 +216,12 @@ const Cashier = () => {
                         <TableCell>{transaction.description}</TableCell>
                         <TableCell className="capitalize">{transaction.payment_method}</TableCell>
                         <TableCell>
-                          <Badge variant={transaction.transaction_type === 'ingreso' ? 'default' : 'outline'} className={transaction.transaction_type === 'ingreso' ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-red-100 text-red-800 hover:bg-red-200'}>
-                            {transaction.transaction_type === 'ingreso' ? 'Ingreso' : 'Egreso'}
+                          <Badge variant={transaction.transaction_type === 'income' ? 'default' : 'outline'} className={transaction.transaction_type === 'income' ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-red-100 text-red-800 hover:bg-red-200'}>
+                            {transaction.transaction_type === 'income' ? 'Ingreso' : 'Egreso'}
                           </Badge>
                         </TableCell>
-                        <TableCell className={`text-right font-medium ${transaction.transaction_type === 'ingreso' ? 'text-green-600' : 'text-red-600'}`}>
-                          {transaction.transaction_type === 'ingreso' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                        <TableCell className={`text-right font-medium ${transaction.transaction_type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                          {transaction.transaction_type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
                         </TableCell>
                       </TableRow>
                     ))
@@ -244,13 +245,13 @@ const Cashier = () => {
                     <TableRow>
                       <TableCell colSpan={4} className="text-center h-24">Cargando transacciones...</TableCell>
                     </TableRow>
-                  ) : transactions.filter(t => t.transaction_type === 'ingreso').length === 0 ? (
+                  ) : transactions.filter(t => t.transaction_type === 'income').length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={4} className="text-center h-24">No hay ingresos registrados</TableCell>
                     </TableRow>
                   ) : (
                     transactions
-                      .filter(t => t.transaction_type === 'ingreso')
+                      .filter(t => t.transaction_type === 'income')
                       .map((transaction) => (
                         <TableRow key={transaction.id}>
                           <TableCell>{formatDate(transaction.created_at)}</TableCell>
@@ -281,13 +282,13 @@ const Cashier = () => {
                     <TableRow>
                       <TableCell colSpan={4} className="text-center h-24">Cargando transacciones...</TableCell>
                     </TableRow>
-                  ) : transactions.filter(t => t.transaction_type === 'egreso').length === 0 ? (
+                  ) : transactions.filter(t => t.transaction_type === 'expense').length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={4} className="text-center h-24">No hay egresos registrados</TableCell>
                     </TableRow>
                   ) : (
                     transactions
-                      .filter(t => t.transaction_type === 'egreso')
+                      .filter(t => t.transaction_type === 'expense')
                       .map((transaction) => (
                         <TableRow key={transaction.id}>
                           <TableCell>{formatDate(transaction.created_at)}</TableCell>
