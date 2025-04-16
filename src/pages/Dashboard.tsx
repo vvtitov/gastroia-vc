@@ -1,11 +1,13 @@
+
 import React, { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { SalesChart } from "@/components/dashboard/SalesChart";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { OrdersTable } from "@/components/dashboard/OrdersTable";
 import { InventoryAlert } from "@/components/dashboard/InventoryAlert";
-import { ChatbotPreview } from "@/components/dashboard/ChatbotPreview";
-import { BarChart3, ShoppingCart, Users, Clock, ChefHat, PackageOpen, TruckIcon, MessageSquare } from "lucide-react";
+import { RecentActivity } from "@/components/dashboard/RecentActivity";
+import { QuickActions } from "@/components/dashboard/QuickActions";
+import { BarChart3, ShoppingCart, Users, Clock, ChefHat, PackageOpen, TruckIcon } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -95,6 +97,9 @@ const Dashboard = () => {
             : "Gestiona tus productos, pedidos y comunícate con tus clientes."}
         </p>
 
+        {/* Quick Actions */}
+        <QuickActions userType={userType} />
+
         {userType === 'business' ? (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -129,7 +134,7 @@ const Dashboard = () => {
               </div>
               <div className="space-y-4 sm:space-y-6">
                 <InventoryAlert />
-                <ChatbotPreview />
+                <RecentActivity userType={userType} />
               </div>
             </div>
           </>
@@ -168,28 +173,6 @@ const Dashboard = () => {
               <div className="flex flex-col gap-4 sm:gap-6">
                 <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-medium">Mensajes Recientes</h3>
-                    <MessageSquare className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="bg-muted/40 p-3 rounded-lg">
-                      <div className="flex justify-between items-start">
-                        <span className="font-medium">Restaurante El Sabor</span>
-                        <span className="text-xs text-muted-foreground">Hace 2h</span>
-                      </div>
-                      <p className="text-sm mt-1 line-clamp-2">¿Cuándo llegaría el pedido #2345 de aceite de oliva?</p>
-                    </div>
-                    <div className="bg-muted/40 p-3 rounded-lg">
-                      <div className="flex justify-between items-start">
-                        <span className="font-medium">Bar La Esquina</span>
-                        <span className="text-xs text-muted-foreground">Hace 5h</span>
-                      </div>
-                      <p className="text-sm mt-1 line-clamp-2">Necesitamos realizar un pedido urgente de bebidas.</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow">
-                  <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-medium">Stock Bajo</h3>
                     <PackageOpen className="h-5 w-5 text-muted-foreground" />
                   </div>
@@ -208,6 +191,7 @@ const Dashboard = () => {
                     </div>
                   </div>
                 </div>
+                <RecentActivity userType={userType} />
               </div>
             </div>
           </>
