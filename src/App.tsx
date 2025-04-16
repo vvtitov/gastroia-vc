@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/hooks/use-auth";
 import AuthGuard from "@/components/AuthGuard";
 import Index from "./pages/Index";
@@ -26,6 +26,18 @@ import Products from "./pages/Products";
 
 const queryClient = new QueryClient();
 
+// Custom Route Wrapper que verifica si es una ruta de demostración
+const DemoWrapper = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+  const isDemo = location.search.includes('demo=true');
+  
+  if (isDemo) {
+    return <>{children}</>;
+  }
+  
+  return <AuthGuard>{children}</AuthGuard>;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -41,105 +53,105 @@ const App = () => (
             <Route 
               path="/dashboard" 
               element={
-                <AuthGuard>
+                <DemoWrapper>
                   <Dashboard />
-                </AuthGuard>
+                </DemoWrapper>
               } 
             />
             <Route 
               path="/orders" 
               element={
-                <AuthGuard>
+                <DemoWrapper>
                   <Orders />
-                </AuthGuard>
+                </DemoWrapper>
               } 
             />
             <Route 
               path="/cashier" 
               element={
-                <AuthGuard>
+                <DemoWrapper>
                   <Cashier />
-                </AuthGuard>
+                </DemoWrapper>
               } 
             />
             <Route 
               path="/stock" 
               element={
-                <AuthGuard>
+                <DemoWrapper>
                   <Stock />
-                </AuthGuard>
+                </DemoWrapper>
               } 
             />
             <Route 
               path="/chat" 
               element={
-                <AuthGuard>
+                <DemoWrapper>
                   <Chat />
-                </AuthGuard>
+                </DemoWrapper>
               } 
             />
             <Route 
               path="/employees" 
               element={
-                <AuthGuard>
+                <DemoWrapper>
                   <Employees />
-                </AuthGuard>
+                </DemoWrapper>
               } 
             />
             <Route 
               path="/analytics" 
               element={
-                <AuthGuard>
+                <DemoWrapper>
                   <Analytics />
-                </AuthGuard>
+                </DemoWrapper>
               } 
             />
             <Route 
               path="/kitchen" 
               element={
-                <AuthGuard>
+                <DemoWrapper>
                   <Kitchen />
-                </AuthGuard>
+                </DemoWrapper>
               } 
             />
             <Route 
               path="/business" 
               element={
-                <AuthGuard>
+                <DemoWrapper>
                   <Business />
-                </AuthGuard>
+                </DemoWrapper>
               } 
             />
             <Route 
               path="/settings" 
               element={
-                <AuthGuard>
+                <DemoWrapper>
                   <Settings />
-                </AuthGuard>
+                </DemoWrapper>
               } 
             />
             <Route 
               path="/messages" 
               element={
-                <AuthGuard>
+                <DemoWrapper>
                   <Messages />
-                </AuthGuard>
+                </DemoWrapper>
               } 
             />
             <Route 
               path="/marketplace" 
               element={
-                <AuthGuard>
+                <DemoWrapper>
                   <MarketPlace />
-                </AuthGuard>
+                </DemoWrapper>
               } 
             />
             <Route 
               path="/products" 
               element={
-                <AuthGuard>
+                <DemoWrapper>
                   <Products />
-                </AuthGuard>
+                </DemoWrapper>
               } 
             />
             <Route path="*" element={<NotFound />} />

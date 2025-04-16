@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
@@ -12,10 +13,11 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const navigate = useNavigate();
 
   // Check if this is a demo route
+  const urlParams = new URLSearchParams(location.search);
+  const isDemo = urlParams.get('demo') === 'true';
+  
+  // If it's a demo, we don't need to redirect
   useEffect(() => {
-    const urlParams = new URLSearchParams(location.search);
-    const isDemo = urlParams.get('demo') === 'true';
-    
     // If it's a demo, we don't need to redirect
     if (isDemo) return;
     
@@ -23,10 +25,9 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     if (!loading && !user) {
       navigate('/auth/login', { state: { from: location }, replace: true });
     }
-  }, [user, loading, location, navigate]);
+  }, [user, loading, location, navigate, isDemo]);
 
   // If it's a demo route, render children regardless of authentication
-  const isDemo = new URLSearchParams(location.search).get('demo') === 'true';
   if (isDemo) {
     return <>{children}</>;
   }

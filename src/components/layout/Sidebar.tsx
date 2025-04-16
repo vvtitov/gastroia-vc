@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -16,7 +17,6 @@ import {
   ShoppingBag
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 
 interface SidebarLinkProps {
@@ -25,12 +25,17 @@ interface SidebarLinkProps {
   label: string;
   isActive: boolean;
   setOpen?: (open: boolean) => void;
+  isDemo?: boolean;
+  demoType?: string;
 }
 
-const SidebarLink: React.FC<SidebarLinkProps> = ({ to, icon, label, isActive, setOpen }) => {
+const SidebarLink: React.FC<SidebarLinkProps> = ({ to, icon, label, isActive, setOpen, isDemo, demoType }) => {
+  // Si estamos en modo demo, asegúrate de que la URL mantiene los parámetros de demo
+  const linkTo = isDemo ? `${to}?demo=true&type=${demoType || 'business'}` : to;
+
   return (
     <Link
-      to={to}
+      to={linkTo}
       className={cn(
         "flex items-center gap-3.5 px-4 py-3 text-sm font-medium rounded-lg transition-colors",
         isActive
@@ -61,42 +66,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
   const [demoType, setDemoType] = useState<string>('business');
 
   useEffect(() => {
-    const fetchUserType = async () => {
-      // Check for demo mode
-      const urlParams = new URLSearchParams(window.location.search);
-      const demo = urlParams.get('demo');
-      
-      if (demo === 'true') {
-        setIsDemo(true);
-        const type = urlParams.get('type');
-        setDemoType(type || 'business');
-        return;
-      }
-
-      // Otherwise check real user type
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('user_type')
-          .eq('id', user.id)
-          .single();
-        
-        if (!error && data) {
-          setUserType(data.user_type);
-        }
-      } catch (error) {
-        console.error('Error fetching user profile:', error);
-      }
-    };
+    const urlParams = new URLSearchParams(location.search);
+    const demo = urlParams.get('demo');
     
-    fetchUserType();
-  }, [user, location.search]);
-  
-  // Determine which type to use
-  const effectiveUserType = isDemo ? demoType : userType;
+    if (demo === 'true') {
+      setIsDemo(true);
+      const type = urlParams.get('type');
+      setDemoType(type || 'business');
+      setUserType(type || 'business');
+      return;
+    }
 
+    // Si no es demo, usamos el tipo de usuario normal
+    setIsDemo(false);
+    setUserType('business'); // Default value, should be updated with user data
+  }, [location.search, user]);
+  
   // Common links for both business and provider
   const commonLinks = [
     { to: "/dashboard", icon: <LayoutDashboard size={20} />, label: "Dashboard" },
@@ -126,11 +111,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
   // Choose links based on user type
   const links = [
     ...commonLinks,
-    ...(effectiveUserType === 'business' ? businessLinks : []),
-    ...(effectiveUserType === 'provider' ? providerLinks : []),
+    ...(userType === 'business' ? businessLinks : []),
+    ...(userType === 'provider' ? providerLinks : []),
   ];
 
-  // Drawer para mobile
+  // Para determinar si un link está activo
+  const isLinkActive = (path: string) => {
+    return pathname === path;
+  };
+
   return (
     <>
       {/* Drawer en mobile */}
@@ -159,20 +148,33 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
             to={link.to}
             icon={link.icon}
             label={link.label}
-            isActive={pathname === link.to}
+            isActive={isLinkActive(link.to)}
             setOpen={setOpen}
+            isDemo={isDemo}
+            demoType={demoType}
           />
         ))}
       </nav>
 
       <div className="p-4 border-t border-sidebar-accent">
-        <button
-          onClick={() => signOut()}
-          className="flex w-full items-center gap-3.5 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-sidebar-foreground hover:bg-sidebar-accent/50"
-        >
-          <LogOut size={20} />
-          <span>Cerrar sesión</span>
-        </button>
+        {isDemo ? (
+          <Link to="/">
+            <button
+              className="flex w-full items-center gap-3.5 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-sidebar-foreground hover:bg-sidebar-accent/50"
+            >
+              <LogOut size={20} />
+              <span>Salir del Demo</span>
+            </button>
+          </Link>
+        ) : (
+          <button
+            onClick={() => signOut()}
+            className="flex w-full items-center gap-3.5 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-sidebar-foreground hover:bg-sidebar-accent/50"
+          >
+            <LogOut size={20} />
+            <span>Cerrar sesión</span>
+          </button>
+        )}
       </div>
     </aside>
     </>
