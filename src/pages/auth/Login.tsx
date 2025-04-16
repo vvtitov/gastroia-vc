@@ -1,26 +1,67 @@
 
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bot } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { useForm } from "react-hook-form";
+import { toast } from "@/components/ui/use-toast";
+
+interface LoginFormValues {
+  email: string;
+  password: string;
+  remember: boolean;
+}
 
 const Login = () => {
-  const [isLoading, setIsLoading] = React.useState(false);
+  const { signIn, user } = useAuth();
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
   
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
+    defaultValues: {
+      email: "",
+      password: "",
+      remember: false,
+    },
+  });
+  
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
+  
+  const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
-    
-    // In the real implementation, we would authenticate the user here
-    // For the MVP, we'll just simulate a login delay and redirect
-    setTimeout(() => {
+    try {
+      const { error } = await signIn(data.email, data.password);
+      
+      if (error) {
+        toast({
+          title: "Error al iniciar sesión",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Inicio de sesión exitoso",
+          description: "Bienvenido a GastroIA",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error al iniciar sesión",
+        description: "Ha ocurrido un error inesperado, por favor intenta nuevamente",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-      window.location.href = "/dashboard";
-    }, 1500);
+    }
   };
 
   return (
@@ -43,15 +84,24 @@ const Login = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input 
                   id="email" 
                   type="email" 
                   placeholder="tu@negocio.com" 
-                  required 
+                  {...register("email", { 
+                    required: "El email es obligatorio",
+                    pattern: {
+                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                      message: "Email inválido"
+                    }
+                  })}
                 />
+                {errors.email && (
+                  <p className="text-sm font-medium text-destructive">{errors.email.message}</p>
+                )}
               </div>
               
               <div className="space-y-2">
@@ -68,12 +118,17 @@ const Login = () => {
                   id="password" 
                   type="password" 
                   placeholder="••••••••" 
-                  required
+                  {...register("password", { 
+                    required: "La contraseña es obligatoria" 
+                  })}
                 />
+                {errors.password && (
+                  <p className="text-sm font-medium text-destructive">{errors.password.message}</p>
+                )}
               </div>
               
               <div className="flex items-center space-x-2">
-                <Checkbox id="remember" />
+                <Checkbox id="remember" {...register("remember")} />
                 <Label htmlFor="remember" className="text-sm font-normal">
                   Recordarme
                 </Label>

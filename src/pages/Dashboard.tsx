@@ -7,12 +7,15 @@ import { OrdersTable } from "@/components/dashboard/OrdersTable";
 import { InventoryAlert } from "@/components/dashboard/InventoryAlert";
 import { ChatbotPreview } from "@/components/dashboard/ChatbotPreview";
 import { BarChart3, ShoppingCart, Users, Clock, ChefHat } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Dashboard = () => {
+  const isMobile = useIsMobile();
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Bienvenido a GastroIA</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">Bienvenido a GastroIA</h1>
         <p className="text-muted-foreground">
           Visualiza y gestiona todos los aspectos de tu negocio desde un solo lugar.
         </p>
@@ -44,14 +47,16 @@ const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          <SalesChart />
+          <div className={`${isMobile ? "" : "col-span-2"}`}>
+            <SalesChart />
+          </div>
           <div className="space-y-4 sm:space-y-6">
             <InventoryAlert />
             <ChatbotPreview />
           </div>
         </div>
 
-        <div className="mt-10 pt-2">
+        <div className="mt-8 pt-2">
           <OrdersTable />
         </div>
       </div>

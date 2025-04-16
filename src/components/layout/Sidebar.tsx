@@ -12,8 +12,10 @@ import {
   Settings, 
   Store, 
   ChefHat, 
-  LogOut 
+  LogOut,
+  CreditCard
 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 interface SidebarLinkProps {
   to: string;
@@ -51,10 +53,12 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
   const location = useLocation();
   const pathname = location.pathname;
+  const { signOut } = useAuth();
 
   const links = [
     { to: "/dashboard", icon: <LayoutDashboard size={20} />, label: "Dashboard" },
     { to: "/orders", icon: <ShoppingCart size={20} />, label: "Pedidos" },
+    { to: "/cashier", icon: <CreditCard size={20} />, label: "Caja" },
     { to: "/stock", icon: <PackageOpen size={20} />, label: "Inventario" },
     { to: "/employees", icon: <Users size={20} />, label: "Empleados" },
     { to: "/kitchen", icon: <ChefHat size={20} />, label: "Cocina" },
@@ -75,7 +79,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
       />
       <aside
         className={`fixed z-50 top-0 left-0 h-full w-64 bg-sidebar transform transition-transform duration-200 flex flex-col ${open ? 'translate-x-0' : '-translate-x-full'} md:static md:flex md:translate-x-0 ${open ? '' : 'hidden'} md:block`}
-        style={{ boxShadow: open ? '0 0 0 9999px rgba(0,0,0,0.4)' : undefined }}
         onClick={e => e.stopPropagation()}
       >
       <div className="p-4">
@@ -101,12 +104,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
       </nav>
 
       <div className="p-4 border-t border-sidebar-accent">
-        <SidebarLink
-          to="/logout"
-          icon={<LogOut size={20} />}
-          label="Cerrar sesión"
-          isActive={false}
-        />
+        <button
+          onClick={() => signOut()}
+          className="flex w-full items-center gap-3.5 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-sidebar-foreground hover:bg-sidebar-accent/50"
+        >
+          <LogOut size={20} />
+          <span>Cerrar sesión</span>
+        </button>
       </div>
     </aside>
     </>

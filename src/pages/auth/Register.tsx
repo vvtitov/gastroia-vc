@@ -1,26 +1,80 @@
 
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bot } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/hooks/use-auth";
+import { useForm } from "react-hook-form";
+import { toast } from "@/components/ui/use-toast";
+
+interface RegisterFormValues {
+  business_name?: string;
+  provider_name?: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
 
 const Register = () => {
-  const [isLoading, setIsLoading] = React.useState(false);
+  const { signUp, user } = useAuth();
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("business");
   
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
+  const { register, handleSubmit, watch, formState: { errors }, reset } = useForm<RegisterFormValues>();
+  const password = watch("password");
+  
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
+  
+  useEffect(() => {
+    reset();
+  }, [activeTab, reset]);
+
+  const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
     
-    // In the real implementation, we would register the user here
-    // For the MVP, we'll just simulate a registration delay and redirect
-    setTimeout(() => {
+    try {
+      const metadata = {
+        first_name: data.first_name,
+        last_name: data.last_name,
+        business_name: activeTab === "business" ? data.business_name : undefined,
+        provider_name: activeTab === "provider" ? data.provider_name : undefined,
+        account_type: activeTab,
+      };
+      
+      const { error } = await signUp(data.email, data.password, metadata);
+      
+      if (error) {
+        toast({
+          title: "Error al registrarse",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Registro exitoso",
+          description: "Bienvenido a GastroIA",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error al registrarse",
+        description: "Ha ocurrido un error inesperado, por favor intenta nuevamente",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-      window.location.href = "/dashboard";
-    }, 1500);
+    }
   };
 
   return (
@@ -43,42 +97,102 @@ const Register = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="business" className="mb-6">
+            <Tabs defaultValue="business" value={activeTab} onValueChange={setActiveTab} className="mb-6">
               <TabsList className="w-full">
                 <TabsTrigger value="business" className="flex-1">Negocio</TabsTrigger>
                 <TabsTrigger value="provider" className="flex-1">Proveedor</TabsTrigger>
               </TabsList>
               <TabsContent value="business">
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="business-name">Nombre del negocio</Label>
-                    <Input id="business-name" placeholder="Ej. Restaurante El Sabor" required />
+                    <Input 
+                      id="business-name" 
+                      placeholder="Ej. Restaurante El Sabor" 
+                      {...register("business_name", { required: "El nombre del negocio es obligatorio" })}
+                    />
+                    {errors.business_name && (
+                      <p className="text-sm font-medium text-destructive">{errors.business_name.message}</p>
+                    )}
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="first-name">Nombre</Label>
-                      <Input id="first-name" placeholder="Ej. Juan" required />
+                      <Input 
+                        id="first-name" 
+                        placeholder="Ej. Juan" 
+                        {...register("first_name", { required: "El nombre es obligatorio" })}
+                      />
+                      {errors.first_name && (
+                        <p className="text-sm font-medium text-destructive">{errors.first_name.message}</p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="last-name">Apellido</Label>
-                      <Input id="last-name" placeholder="Ej. Pérez" required />
+                      <Input 
+                        id="last-name" 
+                        placeholder="Ej. Pérez" 
+                        {...register("last_name", { required: "El apellido es obligatorio" })}
+                      />
+                      {errors.last_name && (
+                        <p className="text-sm font-medium text-destructive">{errors.last_name.message}</p>
+                      )}
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" placeholder="tu@negocio.com" required />
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      placeholder="tu@negocio.com" 
+                      {...register("email", { 
+                        required: "El email es obligatorio",
+                        pattern: {
+                          value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                          message: "Email inválido"
+                        }
+                      })}
+                    />
+                    {errors.email && (
+                      <p className="text-sm font-medium text-destructive">{errors.email.message}</p>
+                    )}
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="password">Contraseña</Label>
-                    <Input id="password" type="password" placeholder="••••••••" required />
+                    <Input 
+                      id="password" 
+                      type="password" 
+                      placeholder="••••••••" 
+                      {...register("password", { 
+                        required: "La contraseña es obligatoria",
+                        minLength: {
+                          value: 6,
+                          message: "La contraseña debe tener al menos 6 caracteres"
+                        }
+                      })}
+                    />
+                    {errors.password && (
+                      <p className="text-sm font-medium text-destructive">{errors.password.message}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password">Confirmar contraseña</Label>
-                    <Input id="confirm-password" type="password" placeholder="••••••••" required />
+                    <Input 
+                      id="confirm-password" 
+                      type="password" 
+                      placeholder="••••••••" 
+                      {...register("confirmPassword", { 
+                        required: "Por favor confirma tu contraseña",
+                        validate: value => value === password || "Las contraseñas no coinciden"
+                      })}
+                    />
+                    {errors.confirmPassword && (
+                      <p className="text-sm font-medium text-destructive">{errors.confirmPassword.message}</p>
+                    )}
                   </div>
                   
                   <Button type="submit" className="w-full" disabled={isLoading}>
@@ -87,36 +201,96 @@ const Register = () => {
                 </form>
               </TabsContent>
               <TabsContent value="provider">
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="provider-name">Nombre de la empresa proveedora</Label>
-                    <Input id="provider-name" placeholder="Ej. Distribuidora de Alimentos S.A." required />
+                    <Input 
+                      id="provider-name" 
+                      placeholder="Ej. Distribuidora de Alimentos S.A." 
+                      {...register("provider_name", { required: "El nombre de la empresa es obligatorio" })}
+                    />
+                    {errors.provider_name && (
+                      <p className="text-sm font-medium text-destructive">{errors.provider_name.message}</p>
+                    )}
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="contact-name">Nombre de contacto</Label>
-                      <Input id="contact-name" placeholder="Ej. María" required />
+                      <Label htmlFor="first-name">Nombre de contacto</Label>
+                      <Input 
+                        id="first-name" 
+                        placeholder="Ej. María" 
+                        {...register("first_name", { required: "El nombre es obligatorio" })}
+                      />
+                      {errors.first_name && (
+                        <p className="text-sm font-medium text-destructive">{errors.first_name.message}</p>
+                      )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="contact-last-name">Apellido</Label>
-                      <Input id="contact-last-name" placeholder="Ej. Rodríguez" required />
+                      <Label htmlFor="last-name">Apellido</Label>
+                      <Input 
+                        id="last-name" 
+                        placeholder="Ej. Rodríguez" 
+                        {...register("last_name", { required: "El apellido es obligatorio" })}
+                      />
+                      {errors.last_name && (
+                        <p className="text-sm font-medium text-destructive">{errors.last_name.message}</p>
+                      )}
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="provider-email">Email</Label>
-                    <Input id="provider-email" type="email" placeholder="contacto@proveedor.com" required />
+                    <Label htmlFor="email">Email</Label>
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      placeholder="contacto@proveedor.com" 
+                      {...register("email", { 
+                        required: "El email es obligatorio",
+                        pattern: {
+                          value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                          message: "Email inválido"
+                        }
+                      })}
+                    />
+                    {errors.email && (
+                      <p className="text-sm font-medium text-destructive">{errors.email.message}</p>
+                    )}
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="provider-password">Contraseña</Label>
-                    <Input id="provider-password" type="password" placeholder="••••••••" required />
+                    <Label htmlFor="password">Contraseña</Label>
+                    <Input 
+                      id="password" 
+                      type="password" 
+                      placeholder="••••••••" 
+                      {...register("password", { 
+                        required: "La contraseña es obligatoria",
+                        minLength: {
+                          value: 6,
+                          message: "La contraseña debe tener al menos 6 caracteres"
+                        }
+                      })}
+                    />
+                    {errors.password && (
+                      <p className="text-sm font-medium text-destructive">{errors.password.message}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="provider-confirm-password">Confirmar contraseña</Label>
-                    <Input id="provider-confirm-password" type="password" placeholder="••••••••" required />
+                    <Label htmlFor="confirm-password">Confirmar contraseña</Label>
+                    <Input 
+                      id="confirm-password" 
+                      type="password" 
+                      placeholder="••••••••" 
+                      {...register("confirmPassword", { 
+                        required: "Por favor confirma tu contraseña",
+                        validate: value => value === password || "Las contraseñas no coinciden"
+                      })}
+                    />
+                    {errors.confirmPassword && (
+                      <p className="text-sm font-medium text-destructive">{errors.confirmPassword.message}</p>
+                    )}
                   </div>
                   
                   <Button type="submit" className="w-full" disabled={isLoading}>
