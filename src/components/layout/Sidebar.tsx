@@ -31,7 +31,11 @@ interface SidebarLinkProps {
 
 const SidebarLink: React.FC<SidebarLinkProps> = ({ to, icon, label, isActive, setOpen, isDemo, demoType }) => {
   // Si estamos en modo demo, asegúrate de que la URL mantiene los parámetros de demo
-  const linkTo = isDemo ? `${to}?demo=true&type=${demoType || 'business'}` : to;
+  const linkTo = isDemo 
+    ? to === "/dashboard" 
+      ? `/demo?type=${demoType || 'business'}` 
+      : `${to}?demo=true&type=${demoType || 'business'}`
+    : to;
 
   return (
     <Link
@@ -66,10 +70,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
   const [demoType, setDemoType] = useState<string>('business');
 
   useEffect(() => {
+    // Check if we're in the demo page or using demo parameters
+    const isDemoPage = pathname === '/demo';
     const urlParams = new URLSearchParams(location.search);
     const demo = urlParams.get('demo');
     
-    if (demo === 'true') {
+    if (isDemoPage || demo === 'true') {
       setIsDemo(true);
       const type = urlParams.get('type');
       setDemoType(type || 'business');
@@ -80,7 +86,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
     // Si no es demo, usamos el tipo de usuario normal
     setIsDemo(false);
     setUserType('business'); // Default value, should be updated with user data
-  }, [location.search, user]);
+  }, [location.search, pathname, user]);
   
   // Common links for both business and provider
   const commonLinks = [
@@ -117,6 +123,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
 
   // Para determinar si un link está activo
   const isLinkActive = (path: string) => {
+    if (pathname === '/demo' && path === '/dashboard') {
+      return true;
+    }
     return pathname === path;
   };
 

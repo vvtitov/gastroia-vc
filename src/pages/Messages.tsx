@@ -23,6 +23,7 @@ interface Message {
   read: boolean;
   created_at: string;
   sender_name?: string;
+  profiles?: { name: string };
 }
 
 interface Contact {
@@ -166,7 +167,7 @@ const Messages = () => {
             order_id,
             read,
             created_at,
-            profiles:sender_id (name)
+            profiles!sender_id(name)
           `)
           .or(`and(sender_id.eq.${user.id},receiver_id.eq.${selectedContact.id}),and(sender_id.eq.${selectedContact.id},receiver_id.eq.${user.id})`)
           .order('created_at', { ascending: true });

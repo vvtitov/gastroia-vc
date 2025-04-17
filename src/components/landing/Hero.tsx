@@ -34,10 +34,10 @@ const Hero = () => {
             </Button>
             {dropdownOpen && (
               <div className="absolute mt-2 w-auto bg-white rounded-md shadow-lg z-10">
-                <Link to="/dashboard?demo=true&type=business" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <Link to="/demo?type=business" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                   Demo Negocio
                 </Link>
-                <Link to="/dashboard?demo=true&type=provider" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <Link to="/demo?type=provider" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                   Demo Proveedor
                 </Link>
               </div>

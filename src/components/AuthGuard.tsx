@@ -13,22 +13,23 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const navigate = useNavigate();
 
   // Check if this is a demo route
+  const isDemoRoute = location.pathname === '/demo';
   const urlParams = new URLSearchParams(location.search);
   const isDemo = urlParams.get('demo') === 'true';
   
   // If it's a demo, we don't need to redirect
   useEffect(() => {
-    // If it's a demo, we don't need to redirect
-    if (isDemo) return;
+    // If it's a demo route or has demo=true param, we don't need to redirect
+    if (isDemoRoute || isDemo) return;
     
     // Otherwise check for authentication
     if (!loading && !user) {
       navigate('/auth/login', { state: { from: location }, replace: true });
     }
-  }, [user, loading, location, navigate, isDemo]);
+  }, [user, loading, location, navigate, isDemo, isDemoRoute]);
 
-  // If it's a demo route, render children regardless of authentication
-  if (isDemo) {
+  // If it's a demo route or has demo=true param, render children regardless of authentication
+  if (isDemoRoute || isDemo) {
     return <>{children}</>;
   }
 

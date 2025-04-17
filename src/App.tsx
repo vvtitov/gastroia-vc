@@ -23,6 +23,7 @@ import Register from "./pages/auth/Register";
 import Messages from "./pages/Messages";
 import MarketPlace from "./pages/MarketPlace";
 import Products from "./pages/Products";
+import Demo from "./pages/Demo";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,9 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth/login" element={<Login />} />
             <Route path="/auth/register" element={<Register />} />
+            
+            {/* Ruta pública para la demo */}
+            <Route path="/demo" element={<Demo />} />
             
             <Route 
               path="/dashboard" 
