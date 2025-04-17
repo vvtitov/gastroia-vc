@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
+import { motion } from 'framer-motion';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -37,7 +38,11 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gastro"></div>
+        <motion.div 
+          className="rounded-full h-12 w-12 border-t-2 border-b-2 border-gastro"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        />
       </div>
     );
   }

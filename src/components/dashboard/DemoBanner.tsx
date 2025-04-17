@@ -1,25 +1,67 @@
 
 import React from "react";
+import { AlertCircle, ExternalLink, ToggleLeft, ToggleRight } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 
 interface DemoBannerProps {
   demoType: 'business' | 'provider';
+  onToggleView?: () => void;
 }
 
-export const DemoBanner: React.FC<DemoBannerProps> = ({ demoType }) => {
+export const DemoBanner: React.FC<DemoBannerProps> = ({ demoType, onToggleView }) => {
   return (
-    <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4 rounded-md">
-      <div className="flex">
-        <div className="flex-shrink-0">
-          <svg className="h-5 w-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-          </svg>
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Alert className="bg-primary/10 border-primary/30">
+        <AlertCircle className="h-5 w-5 text-primary" />
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full">
+          <div>
+            <AlertTitle className="mb-2">Modo demostración</AlertTitle>
+            <AlertDescription>
+              Estás viendo una versión de demostración de {demoType === 'business' ? 'Restaurante' : 'Proveedor'}.
+              {onToggleView && (
+                <span className="ml-2">
+                  Cambia a vista de {demoType === 'business' ? 'Proveedor' : 'Restaurante'}:
+                </span>
+              )}
+            </AlertDescription>
+          </div>
+          <div className="mt-3 sm:mt-0 flex space-x-2">
+            {onToggleView && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="flex items-center gap-2 hover:bg-muted/70 transition-all duration-300" 
+                onClick={onToggleView}
+              >
+                {demoType === 'business' ? (
+                  <>
+                    <ToggleLeft className="h-4 w-4" />
+                    <span>Ver Proveedor</span>
+                  </>
+                ) : (
+                  <>
+                    <ToggleRight className="h-4 w-4" />
+                    <span>Ver Restaurante</span>
+                  </>
+                )}
+              </Button>
+            )}
+            <Link to="/auth/register">
+              <Button size="sm" className="flex items-center gap-2">
+                <span>Registrarse</span>
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
         </div>
-        <div className="ml-3">
-          <p className="text-sm text-yellow-700">
-            Estás en el modo demostración - {demoType === 'business' ? 'Vista de Negocio' : 'Vista de Proveedor'}
-          </p>
-        </div>
-      </div>
-    </div>
+      </Alert>
+    </motion.div>
   );
 };
