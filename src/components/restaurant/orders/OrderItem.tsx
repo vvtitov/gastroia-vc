@@ -4,7 +4,7 @@ import { TableRow, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { ChevronsRight, CookingPot, CheckCircle, Printer } from "lucide-react";
 import { OrderStatusBadge, OrderStatus } from "./OrderStatusBadge";
-import { OrderType } from "./OrdersList";
+import { OrderType } from "@/types/orders";
 
 interface OrderItemProps {
   order: OrderType;

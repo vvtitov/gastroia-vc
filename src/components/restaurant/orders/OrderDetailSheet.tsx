@@ -6,8 +6,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { ChevronsRight, CheckCircle, CookingPot, Printer } from "lucide-react";
 import { motion } from "framer-motion";
-import { OrderStatusBadge, OrderStatus, ORDER_STATUS } from "./OrderStatusBadge";
-import { OrderType } from "./OrdersList";
+import { OrderStatusBadge, OrderStatus } from "./OrderStatusBadge";
+import { OrderType } from "@/types/orders";
 
 interface OrderDetailSheetProps {
   open: boolean;

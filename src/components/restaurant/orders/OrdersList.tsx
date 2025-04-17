@@ -4,23 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { OrderItem } from "./OrderItem";
 import { OrderStatus } from "./OrderStatusBadge";
-
-export interface OrderItem {
-  name: string;
-  quantity: number;
-  price: number;
-}
-
-export interface OrderType {
-  id: string;
-  table: string;
-  customerName: string;
-  timestamp: string;
-  status: OrderStatus;
-  items: OrderItem[];
-  total: number;
-  paymentMethod: string;
-}
+import { OrderType } from "@/types/orders";
 
 interface OrdersListProps {
   orders: OrderType[];
