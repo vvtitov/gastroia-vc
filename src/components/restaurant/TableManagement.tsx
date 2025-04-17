@@ -1,17 +1,11 @@
 
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Edit, Trash2, MoveRight, Eye } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TableListView, TableItem } from "./table-management/TableListView";
+import { ZoneListView, ZoneItem } from "./table-management/ZoneListView";
+import { TableDialogs } from "./table-management/TableDialogs";
+import { motion } from "framer-motion";
 
 // Demo table zones
 const DEMO_ZONES = [
@@ -44,16 +38,21 @@ const DEMO_TABLES = [
 ];
 
 export const TableManagement: React.FC = () => {
-  const [zones, setZones] = useState(DEMO_ZONES);
-  const [tables, setTables] = useState(DEMO_TABLES);
+  const [zones, setZones] = useState<ZoneItem[]>(DEMO_ZONES);
+  const [tables, setTables] = useState<TableItem[]>(DEMO_TABLES);
   const [selectedTab, setSelectedTab] = useState("tables");
-  const [editingTable, setEditingTable] = useState<any>(null);
+  const [editingTable, setEditingTable] = useState<TableItem | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [newTableData, setNewTableData] = useState({
     name: "",
     zone: "Interior",
     capacity: "4"
   });
+
+  const handleOpenAddDialog = () => {
+    setAddDialogOpen(true);
+  };
 
   const handleAddTable = () => {
     if (!newTableData.name) {
@@ -74,10 +73,16 @@ export const TableManagement: React.FC = () => {
 
     setTables([...tables, newTable]);
     setNewTableData({ name: "", zone: "Interior", capacity: "4" });
+    setAddDialogOpen(false);
     toast({
       title: "Mesa creada",
       description: `${newTable.name} ha sido creada exitosamente`
     });
+  };
+
+  const handleOpenEditDialog = (table: TableItem) => {
+    setEditingTable(table);
+    setEditDialogOpen(true);
   };
 
   const handleEditTable = () => {
@@ -105,8 +110,29 @@ export const TableManagement: React.FC = () => {
     });
   };
 
+  const handleAddZone = () => {
+    // Logic to add a new zone would go here
+    toast({
+      title: "Función en desarrollo",
+      description: "La creación de nuevas zonas estará disponible próximamente"
+    });
+  };
+
+  const fadeIn = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: { duration: 0.3 }
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <motion.div 
+      className="space-y-6"
+      initial="hidden"
+      animate="visible"
+      variants={fadeIn}
+    >
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList>
           <TabsTrigger value="tables">Mesas</TabsTrigger>
@@ -114,225 +140,32 @@ export const TableManagement: React.FC = () => {
         </TabsList>
 
         <TabsContent value="tables" className="space-y-4 mt-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex justify-between items-center">
-                <span>Mesas configuradas</span>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button size="sm" className="flex items-center gap-1">
-                      <Plus className="h-4 w-4" />
-                      <span>Nueva mesa</span>
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Crear nueva mesa</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="table-name">Nombre</Label>
-                        <Input 
-                          id="table-name" 
-                          placeholder="Mesa 13"
-                          value={newTableData.name}
-                          onChange={(e) => setNewTableData({ ...newTableData, name: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="table-zone">Zona</Label>
-                        <Select 
-                          value={newTableData.zone}
-                          onValueChange={(value) => setNewTableData({ ...newTableData, zone: value })}
-                        >
-                          <SelectTrigger id="table-zone">
-                            <SelectValue placeholder="Seleccionar zona" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {zones.map(zone => (
-                              <SelectItem key={zone.id} value={zone.name}>
-                                {zone.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="table-capacity">Capacidad</Label>
-                        <Select 
-                          value={newTableData.capacity}
-                          onValueChange={(value) => setNewTableData({ ...newTableData, capacity: value })}
-                        >
-                          <SelectTrigger id="table-capacity">
-                            <SelectValue placeholder="Seleccionar capacidad" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1">1 persona</SelectItem>
-                            <SelectItem value="2">2 personas</SelectItem>
-                            <SelectItem value="4">4 personas</SelectItem>
-                            <SelectItem value="6">6 personas</SelectItem>
-                            <SelectItem value="8">8 personas</SelectItem>
-                            <SelectItem value="10">10 personas</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button onClick={handleAddTable}>Crear mesa</Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Zona</TableHead>
-                    <TableHead>Capacidad</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {tables.map(table => (
-                    <TableRow key={table.id}>
-                      <TableCell className="font-medium">{table.name}</TableCell>
-                      <TableCell>{table.zone}</TableCell>
-                      <TableCell>{table.capacity} personas</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => {
-                              setEditingTable(table);
-                              setEditDialogOpen(true);
-                            }}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => handleDeleteTable(table.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <TableListView 
+            tables={tables} 
+            onAddTable={handleOpenAddDialog}
+            onEditTable={handleOpenEditDialog}
+            onDeleteTable={handleDeleteTable}
+          />
         </TabsContent>
 
         <TabsContent value="zones" className="space-y-4 mt-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex justify-between items-center">
-                <span>Zonas configuradas</span>
-                <Button size="sm" className="flex items-center gap-1">
-                  <Plus className="h-4 w-4" />
-                  <span>Nueva zona</span>
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Mesas</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {zones.map(zone => (
-                    <TableRow key={zone.id}>
-                      <TableCell className="font-medium">{zone.name}</TableCell>
-                      <TableCell>{zone.tables}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <ZoneListView zones={zones} onAddZone={handleAddZone} />
         </TabsContent>
       </Tabs>
 
-      {/* Edit Table Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar mesa</DialogTitle>
-          </DialogHeader>
-          {editingTable && (
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-table-name">Nombre</Label>
-                <Input 
-                  id="edit-table-name" 
-                  value={editingTable.name}
-                  onChange={(e) => setEditingTable({ ...editingTable, name: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-table-zone">Zona</Label>
-                <Select 
-                  value={editingTable.zone}
-                  onValueChange={(value) => setEditingTable({ ...editingTable, zone: value })}
-                >
-                  <SelectTrigger id="edit-table-zone">
-                    <SelectValue placeholder="Seleccionar zona" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {zones.map(zone => (
-                      <SelectItem key={zone.id} value={zone.name}>
-                        {zone.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-table-capacity">Capacidad</Label>
-                <Select 
-                  value={editingTable.capacity.toString()}
-                  onValueChange={(value) => setEditingTable({ ...editingTable, capacity: parseInt(value) })}
-                >
-                  <SelectTrigger id="edit-table-capacity">
-                    <SelectValue placeholder="Seleccionar capacidad" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1 persona</SelectItem>
-                    <SelectItem value="2">2 personas</SelectItem>
-                    <SelectItem value="4">4 personas</SelectItem>
-                    <SelectItem value="6">6 personas</SelectItem>
-                    <SelectItem value="8">8 personas</SelectItem>
-                    <SelectItem value="10">10 personas</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button onClick={handleEditTable}>Guardar cambios</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+      <TableDialogs
+        zones={zones}
+        newTableData={newTableData}
+        setNewTableData={setNewTableData}
+        editingTable={editingTable}
+        setEditingTable={setEditingTable}
+        editDialogOpen={editDialogOpen}
+        setEditDialogOpen={setEditDialogOpen}
+        addDialogOpen={addDialogOpen}
+        setAddDialogOpen={setAddDialogOpen}
+        onAddTable={handleAddTable}
+        onEditTable={handleEditTable}
+      />
+    </motion.div>
   );
 };

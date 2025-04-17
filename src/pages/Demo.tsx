@@ -35,7 +35,10 @@ const Demo = () => {
 
   return (
     <DashboardLayout>
-      <DemoBanner />
+      <DemoBanner 
+        demoType={userType} 
+        onToggleView={toggleUserType}
+      />
       <div className="flex flex-col gap-4 md:gap-6 lg:gap-8">
         <motion.div
           className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700 p-4 rounded-lg"
@@ -73,7 +76,7 @@ const Demo = () => {
         {userType === "business" ? (
           <BusinessDashboard businessName={businessName} />
         ) : (
-          <ProviderDashboard />
+          <ProviderDashboard businessName={businessName} />
         )}
       </div>
     </DashboardLayout>
