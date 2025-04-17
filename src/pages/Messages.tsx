@@ -1,567 +1,494 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useToast } from "@/components/ui/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Send, Check, ChevronRight, ChevronLeft } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
-import { cn } from "@/lib/utils";
+import { Send, Search, Inbox, Clock, Archive, Star, User, CheckCheck } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
-interface Message {
-  id: string;
-  content: string;
-  sender_id: string;
-  receiver_id: string;
-  order_id: string | null;
-  read: boolean;
-  created_at: string;
-  sender_name?: string;
-  profiles?: { name: string };
-}
+// Types and demo data
+type MessageStatus = 'read' | 'unread' | 'archived';
 
 interface Contact {
   id: string;
   name: string;
-  business_name: string | null;
-  last_message?: string;
-  last_message_time?: string;
-  unread_count: number;
+  avatar?: string;
+  role: 'supplier' | 'customer' | 'staff';
+  lastActive?: string;
 }
 
-const Messages = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSending, setIsSending] = useState(false);
-  const [showContactsList, setShowContactsList] = useState(true);
-  const messageEndRef = useRef<HTMLDivElement | null>(null);
-  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+interface MessageThread {
+  id: string;
+  contactId: string;
+  messages: {
+    id: string;
+    content: string;
+    timestamp: string;
+    isFromMe: boolean;
+    status: 'sent' | 'delivered' | 'read';
+  }[];
+  lastMessage: string;
+  lastTimestamp: string;
+  status: MessageStatus;
+  isStarred: boolean;
+}
 
-  // Fetch contacts
-  useEffect(() => {
-    if (!user) return;
+const DEMO_CONTACTS: Contact[] = [
+  { id: "1", name: "Distribuidora de Bebidas SA", role: 'supplier', lastActive: "Hace 3h" },
+  { id: "2", name: "Juan Cliente", role: 'customer', lastActive: "Hace 1d" },
+  { id: "3", name: "María (Servicio)", role: 'staff', lastActive: "Activo ahora" },
+  { id: "4", name: "Carnicería Premium", role: 'supplier', lastActive: "Hace 2d" },
+  { id: "5", name: "Carlos Rodríguez", role: 'customer', lastActive: "Hace 6h" },
+  { id: "6", name: "Ana (Cocina)", role: 'staff', lastActive: "Hace 1h" },
+];
+
+const DEMO_THREADS: MessageThread[] = [
+  {
+    id: "t1",
+    contactId: "1",
+    lastMessage: "Te confirmo el pedido para mañana a primera hora.",
+    lastTimestamp: "10:30",
+    status: 'unread',
+    isStarred: false,
+    messages: [
+      { id: "m1", content: "Hola, necesitamos hacer un pedido para reponer el stock de bebidas.", timestamp: "10:15", isFromMe: true, status: 'read' },
+      { id: "m2", content: "¡Hola! Claro, ¿qué necesitas exactamente?", timestamp: "10:20", isFromMe: false, status: 'read' },
+      { id: "m3", content: "12 cajas de Coca-Cola, 8 de agua mineral y 6 de cerveza artesanal.", timestamp: "10:25", isFromMe: true, status: 'read' },
+      { id: "m4", content: "Te confirmo el pedido para mañana a primera hora.", timestamp: "10:30", isFromMe: false, status: 'read' },
+    ]
+  },
+  {
+    id: "t2",
+    contactId: "2",
+    lastMessage: "¡Muchas gracias! Los esperamos esta noche.",
+    lastTimestamp: "Ayer",
+    status: 'read',
+    isStarred: true,
+    messages: [
+      { id: "m5", content: "Hola, quisiera hacer una reserva para 4 personas esta noche a las 21:00.", timestamp: "Ayer 15:30", isFromMe: false, status: 'read' },
+      { id: "m6", content: "Hola Juan, déjame revisar la disponibilidad.", timestamp: "Ayer 15:35", isFromMe: true, status: 'read' },
+      { id: "m7", content: "Tenemos mesa disponible a esa hora. ¿A nombre de quién hago la reserva?", timestamp: "Ayer 15:37", isFromMe: true, status: 'read' },
+      { id: "m8", content: "A nombre de Juan Pérez, muchas gracias.", timestamp: "Ayer 15:40", isFromMe: false, status: 'read' },
+      { id: "m9", content: "¡Perfecto! Ya quedó registrada tu reserva para 4 personas a las 21:00.", timestamp: "Ayer 15:42", isFromMe: true, status: 'read' },
+      { id: "m10", content: "¡Muchas gracias! Los esperamos esta noche.", timestamp: "Ayer 15:43", isFromMe: false, status: 'read' },
+    ]
+  },
+  {
+    id: "t3",
+    contactId: "3",
+    lastMessage: "La mesa 8 necesita más servilletas, ¿puedes llevarlas?",
+    lastTimestamp: "13:15",
+    status: 'read',
+    isStarred: false,
+    messages: [
+      { id: "m11", content: "Hola María, ¿puedes atender la mesa 5? Acaban de llegar clientes.", timestamp: "13:00", isFromMe: true, status: 'read' },
+      { id: "m12", content: "Claro, voy en seguida.", timestamp: "13:01", isFromMe: false, status: 'read' },
+      { id: "m13", content: "La mesa 8 necesita más servilletas, ¿puedes llevarlas?", timestamp: "13:15", isFromMe: true, status: 'read' },
+    ]
+  },
+  {
+    id: "t4",
+    contactId: "4",
+    lastMessage: "Mañana llega el pedido de carnes. Confirmo cuando esté en camino.",
+    lastTimestamp: "Lun",
+    status: 'archived',
+    isStarred: false,
+    messages: [
+      { id: "m14", content: "Buenos días, necesitamos hacer un pedido de carnes para la semana.", timestamp: "Lun 09:30", isFromMe: true, status: 'read' },
+      { id: "m15", content: "Buenos días. Por supuesto, ¿qué cortes necesitas?", timestamp: "Lun 09:45", isFromMe: false, status: 'read' },
+      { id: "m16", content: "5kg de bife de chorizo, 3kg de vacío y 4kg de lomo.", timestamp: "Lun 10:00", isFromMe: true, status: 'read' },
+      { id: "m17", content: "Perfecto. ¿Para cuándo lo necesitas?", timestamp: "Lun 10:05", isFromMe: false, status: 'read' },
+      { id: "m18", content: "Para mañana si es posible.", timestamp: "Lun 10:10", isFromMe: true, status: 'read' },
+      { id: "m19", content: "Mañana llega el pedido de carnes. Confirmo cuando esté en camino.", timestamp: "Lun 10:15", isFromMe: false, status: 'read' },
+    ]
+  }
+];
+
+const Messages = () => {
+  const [tab, setTab] = useState<'all' | 'unread' | 'archived'>('all');
+  const [selectedThread, setSelectedThread] = useState<MessageThread | null>(null);
+  const [contacts, setContacts] = useState<Contact[]>(DEMO_CONTACTS);
+  const [threads, setThreads] = useState<MessageThread[]>(DEMO_THREADS);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [messageText, setMessageText] = useState("");
+  
+  // Filter threads based on tab and search term
+  const filteredThreads = threads.filter(thread => {
+    const matchesTab = 
+      tab === 'all' ? thread.status !== 'archived' : 
+      tab === 'unread' ? thread.status === 'unread' : 
+      thread.status === 'archived';
     
-    const fetchContacts = async () => {
-      try {
-        // Get all unique users that the current user has exchanged messages with
-        const { data: messagesData, error: messagesError } = await supabase
-          .from('messages')
-          .select(`
-            id,
-            sender_id,
-            receiver_id,
-            content,
-            created_at,
-            read
-          `)
-          .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-          .order('created_at', { ascending: false })
-          .limit(100);
-          
-        if (messagesError) throw messagesError;
-        
-        if (!messagesData || messagesData.length === 0) {
-          setIsLoading(false);
-          return;
-        }
-        
-        // Extract unique contact IDs
-        const uniqueContactIds = new Set<string>();
-        messagesData.forEach(msg => {
-          const contactId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
-          uniqueContactIds.add(contactId);
-        });
-        
-        // Fetch contact details
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, name, business_name')
-          .in('id', Array.from(uniqueContactIds));
-          
-        if (profilesError) throw profilesError;
-        
-        if (!profilesData) {
-          setIsLoading(false);
-          return;
-        }
-        
-        // Build contacts with last message and unread count
-        const contactsMap = new Map<string, Contact>();
-        
-        profilesData.forEach(profile => {
-          contactsMap.set(profile.id, {
-            id: profile.id,
-            name: profile.name,
-            business_name: profile.business_name,
-            unread_count: 0
-          });
-        });
-        
-        // Add last message and unread count
-        messagesData.forEach(msg => {
-          const isIncoming = msg.receiver_id === user.id;
-          const contactId = isIncoming ? msg.sender_id : msg.receiver_id;
-          const contact = contactsMap.get(contactId);
-          
-          if (contact) {
-            // Only set last_message if it's not already set (first one encountered)
-            if (!contact.last_message) {
-              contact.last_message = msg.content;
-              contact.last_message_time = msg.created_at;
-            }
-            
-            // Count unread messages
-            if (isIncoming && !msg.read) {
-              contact.unread_count += 1;
-            }
-          }
-        });
-        
-        setContacts(Array.from(contactsMap.values()).sort((a, b) => {
-          // Sort by unread count first, then by last message time
-          if (a.unread_count !== b.unread_count) return b.unread_count - a.unread_count;
-          if (a.last_message_time && b.last_message_time) {
-            return new Date(b.last_message_time).getTime() - new Date(a.last_message_time).getTime();
-          }
-          return 0;
-        }));
-      } catch (error) {
-        console.error('Error fetching contacts:', error);
-        toast({
-          title: "Error",
-          description: "No se pudieron cargar los contactos",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
+    const contact = contacts.find(contact => contact.id === thread.contactId);
+    const matchesSearch = contact ? 
+      contact.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      thread.lastMessage.toLowerCase().includes(searchTerm.toLowerCase()) : 
+      false;
+    
+    return matchesTab && (searchTerm === "" || matchesSearch);
+  });
+  
+  // Get contact details for a thread
+  const getContactForThread = (thread: MessageThread): Contact => {
+    return contacts.find(contact => contact.id === thread.contactId) || {
+      id: "unknown",
+      name: "Usuario desconocido",
+      role: "customer",
+    };
+  };
+  
+  // Send a new message
+  const handleSendMessage = () => {
+    if (!messageText.trim() || !selectedThread) return;
+    
+    const newMessage = {
+      id: `m${Date.now()}`,
+      content: messageText,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isFromMe: true,
+      status: 'sent' as const
+    };
+    
+    const updatedThreads = threads.map(thread => {
+      if (thread.id === selectedThread.id) {
+        const updatedThread = {
+          ...thread,
+          messages: [...thread.messages, newMessage],
+          lastMessage: messageText,
+          lastTimestamp: newMessage.timestamp,
+          status: 'read' as MessageStatus
+        };
+        setSelectedThread(updatedThread);
+        return updatedThread;
       }
-    };
+      return thread;
+    });
     
-    fetchContacts();
-  }, [user, toast]);
-  
-  // Fetch messages when a contact is selected
-  useEffect(() => {
-    if (!user || !selectedContact) return;
+    setThreads(updatedThreads);
+    setMessageText("");
     
-    const fetchMessages = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('messages')
-          .select(`
-            id,
-            content,
-            sender_id,
-            receiver_id,
-            order_id,
-            read,
-            created_at,
-            profiles!sender_id(name)
-          `)
-          .or(`and(sender_id.eq.${user.id},receiver_id.eq.${selectedContact.id}),and(sender_id.eq.${selectedContact.id},receiver_id.eq.${user.id})`)
-          .order('created_at', { ascending: true });
-          
-        if (error) throw error;
-        
-        // Format messages
-        const formattedMessages = data?.map(msg => ({
-          ...msg,
-          sender_name: msg.profiles?.name
-        })) || [];
-        
-        setMessages(formattedMessages);
-        
-        // Mark unread messages as read
-        const unreadMessages = formattedMessages.filter(
-          msg => msg.receiver_id === user.id && !msg.read
-        );
-        
-        if (unreadMessages.length > 0) {
-          const unreadIds = unreadMessages.map(msg => msg.id);
-          
-          await supabase
-            .from('messages')
-            .update({ read: true })
-            .in('id', unreadIds);
-            
-          // Update the unread count for this contact
-          setContacts(prev => 
-            prev.map(c => 
-              c.id === selectedContact.id 
-                ? { ...c, unread_count: 0 } 
-                : c
-            )
-          );
-        }
-      } catch (error) {
-        console.error('Error fetching messages:', error);
-        toast({
-          title: "Error",
-          description: "No se pudieron cargar los mensajes",
-          variant: "destructive",
-        });
-      }
-    };
-    
-    fetchMessages();
-    
-    // Subscribe to new messages
-    const channel = supabase
-      .channel('messages_changes')
-      .on('postgres_changes', 
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'messages',
-          filter: `receiver_id=eq.${user.id}`
-        }, 
-        payload => {
-          const newMsg = payload.new as Message;
-          
-          // If the message is from the selected contact, add it to the messages
-          if (newMsg.sender_id === selectedContact.id) {
-            // Fetch the sender name
-            supabase
-              .from('profiles')
-              .select('name')
-              .eq('id', newMsg.sender_id)
-              .single()
-              .then(({ data }) => {
-                if (data) {
-                  setMessages(prev => [...prev, {
-                    ...newMsg,
-                    sender_name: data.name
-                  }]);
-                }
-                
-                // Mark as read
-                supabase
-                  .from('messages')
-                  .update({ read: true })
-                  .eq('id', newMsg.id);
-              });
-          } else {
-            // Update the contacts list with new unread count
-            setContacts(prev => 
-              prev.map(c => 
-                c.id === newMsg.sender_id 
-                  ? { 
-                      ...c, 
-                      unread_count: c.unread_count + 1,
-                      last_message: newMsg.content,
-                      last_message_time: newMsg.created_at
-                    } 
-                  : c
-              )
-            );
-          }
-        }
-      )
-      .subscribe();
-      
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, selectedContact, toast]);
-  
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-  
-  const handleSendMessage = async () => {
-    if (!user || !selectedContact || !newMessage.trim()) return;
-    
-    setIsSending(true);
-    
-    try {
-      const { error } = await supabase
-        .from('messages')
-        .insert({
-          sender_id: user.id,
-          receiver_id: selectedContact.id,
-          content: newMessage.trim(),
-        });
-        
-      if (error) throw error;
-      
-      // Optimistically add the message to the UI
-      const optimisticMessage: Message = {
-        id: Math.random().toString(), // Will be replaced with actual id
-        content: newMessage.trim(),
-        sender_id: user.id,
-        receiver_id: selectedContact.id,
-        order_id: null,
-        read: false,
-        created_at: new Date().toISOString()
+    // Simulate response after delay
+    setTimeout(() => {
+      const responseMessage = {
+        id: `m${Date.now()}`,
+        content: getRandomResponse(messageText),
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isFromMe: false,
+        status: 'read' as const
       };
       
-      setMessages(prev => [...prev, optimisticMessage]);
-      setNewMessage('');
-      
-      // Update the contacts list
-      setContacts(prev => 
-        prev.map(c => 
-          c.id === selectedContact.id 
-            ? { 
-                ...c, 
-                last_message: newMessage.trim(),
-                last_message_time: new Date().toISOString()
-              } 
-            : c
-        )
-      );
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo enviar el mensaje",
-        variant: "destructive",
+      const finalUpdatedThreads = updatedThreads.map(thread => {
+        if (thread.id === selectedThread.id) {
+          const updatedThread = {
+            ...thread,
+            messages: [...thread.messages, responseMessage],
+            lastMessage: responseMessage.content,
+            lastTimestamp: responseMessage.timestamp
+          };
+          setSelectedThread(updatedThread);
+          return updatedThread;
+        }
+        return thread;
       });
-    } finally {
-      setIsSending(false);
+      
+      setThreads(finalUpdatedThreads);
+    }, 2000);
+  };
+  
+  // Get a random response based on the sent message
+  const getRandomResponse = (message: string): string => {
+    const responses = [
+      "Entendido, gracias por la información.",
+      "¡Perfecto! Lo tendré en cuenta.",
+      "De acuerdo, me encargo de eso.",
+      "Gracias por avisarme, lo resuelvo enseguida.",
+      "Recibido. Te confirmaré cuando esté listo."
+    ];
+    
+    return responses[Math.floor(Math.random() * responses.length)];
+  };
+  
+  // Mark a thread as read/unread/archived
+  const handleStatusChange = (threadId: string, newStatus: MessageStatus) => {
+    const updatedThreads = threads.map(thread => 
+      thread.id === threadId ? { ...thread, status: newStatus } : thread
+    );
+    
+    setThreads(updatedThreads);
+    
+    if (selectedThread?.id === threadId) {
+      setSelectedThread({ ...selectedThread, status: newStatus });
+      
+      if (newStatus === 'archived') {
+        setSelectedThread(null);
+      }
     }
   };
   
-  const formatMessageDate = (date: string) => {
-    const messageDate = new Date(date);
-    const today = new Date();
+  // Toggle star status of a thread
+  const handleToggleStar = (threadId: string) => {
+    const updatedThreads = threads.map(thread => 
+      thread.id === threadId ? { ...thread, isStarred: !thread.isStarred } : thread
+    );
     
-    if (messageDate.toDateString() === today.toDateString()) {
-      return format(messageDate, 'HH:mm');
-    } else {
-      return format(messageDate, 'dd MMM, HH:mm', { locale: es });
+    setThreads(updatedThreads);
+    
+    if (selectedThread?.id === threadId) {
+      setSelectedThread({ ...selectedThread, isStarred: !selectedThread.isStarred });
     }
   };
   
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <h1 className="text-2xl sm:text-3xl font-bold">Mensajes</h1>
-        <p className="text-muted-foreground">
-          Comunícate con tus clientes y proveedores
-        </p>
-
-        <Card className="overflow-hidden">
-          <div className="grid md:grid-cols-12 h-[75vh]">
-            {/* Contacts sidebar */}
-            <div className={cn(
-              "bg-muted/30 md:col-span-4 lg:col-span-3 border-r",
-              showContactsList ? "block" : "hidden md:block"
-            )}>
-              <div className="p-3 border-b">
+        <motion.h1 
+          className="text-3xl font-bold"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          Mensajes
+        </motion.h1>
+        
+        <Card className="overflow-hidden h-[calc(100vh-180px)]">
+          <div className="flex h-full">
+            {/* Sidebar */}
+            <div className="w-full md:w-1/3 lg:w-1/4 border-r">
+              <CardHeader className="p-4">
                 <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input 
-                    placeholder="Buscar contactos..." 
-                    className="pl-10"
+                    placeholder="Buscar mensajes..." 
+                    className="pl-8" 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-              </div>
+                
+                <Tabs className="mt-4" value={tab} onValueChange={(value) => setTab(value as any)}>
+                  <TabsList className="grid grid-cols-3">
+                    <TabsTrigger value="all" className="flex items-center gap-1">
+                      <Inbox className="h-4 w-4" />
+                      <span>Bandeja</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="unread" className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      <span>Sin leer</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="archived" className="flex items-center gap-1">
+                      <Archive className="h-4 w-4" />
+                      <span>Archivados</span>
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </CardHeader>
               
-              <ScrollArea className="h-[calc(75vh-57px)]">
-                <div className="divide-y">
-                  {isLoading ? (
-                    <div className="flex justify-center items-center h-32">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gastro"></div>
-                    </div>
-                  ) : contacts.length === 0 ? (
-                    <div className="p-6 text-center text-muted-foreground">
-                      No hay conversaciones recientes
-                    </div>
-                  ) : (
-                    contacts.map(contact => (
-                      <div 
-                        key={contact.id}
-                        className={cn(
-                          "px-4 py-3 cursor-pointer hover:bg-accent/50 transition-colors",
-                          selectedContact?.id === contact.id && "bg-accent"
-                        )}
-                        onClick={() => {
-                          setSelectedContact(contact);
-                          setShowContactsList(false);
-                        }}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="flex-shrink-0 mt-1">
-                            <Avatar>
-                              <AvatarFallback className="bg-primary text-primary-foreground">
-                                {contact.name.substring(0, 2).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex justify-between items-center">
-                              <h4 className="font-medium truncate">
-                                {contact.business_name || contact.name}
-                              </h4>
-                              {contact.last_message_time && (
-                                <span className="text-xs text-muted-foreground">
-                                  {formatMessageDate(contact.last_message_time)}
-                                </span>
-                              )}
-                            </div>
-                            {contact.last_message && (
-                              <p className="text-sm text-muted-foreground truncate">
-                                {contact.last_message}
-                              </p>
-                            )}
-                          </div>
-                          {contact.unread_count > 0 && (
-                            <div className="flex-shrink-0">
-                              <span className="inline-flex items-center justify-center w-5 h-5 bg-primary text-primary-foreground text-xs rounded-full">
-                                {contact.unread_count}
-                              </span>
-                            </div>
-                          )}
+              <ScrollArea className="h-[calc(100%-130px)]">
+                <div className="p-2">
+                  <AnimatePresence initial={false}>
+                    {filteredThreads.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center p-6 text-center">
+                        <div className="rounded-full bg-muted p-3 mb-3">
+                          <Inbox className="h-6 w-6 text-muted-foreground" />
                         </div>
+                        <h3 className="font-medium">No hay mensajes</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          No se encontraron mensajes en esta bandeja
+                        </p>
                       </div>
-                    ))
-                  )}
+                    ) : (
+                      filteredThreads.map((thread) => {
+                        const contact = getContactForThread(thread);
+                        
+                        return (
+                          <motion.div
+                            key={thread.id}
+                            layout
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className={`p-3 mb-1 rounded-lg cursor-pointer ${
+                              selectedThread?.id === thread.id
+                                ? 'bg-muted'
+                                : 'hover:bg-muted/50'
+                            } ${thread.status === 'unread' ? 'font-medium' : ''}`}
+                            onClick={() => {
+                              setSelectedThread(thread);
+                              if (thread.status === 'unread') {
+                                handleStatusChange(thread.id, 'read');
+                              }
+                            }}
+                          >
+                            <div className="flex gap-3">
+                              <Avatar>
+                                {contact.avatar ? (
+                                  <AvatarImage src={contact.avatar} />
+                                ) : (
+                                  <AvatarFallback>{contact.name.charAt(0)}</AvatarFallback>
+                                )}
+                              </Avatar>
+                              
+                              <div className="flex-1 min-w-0">
+                                <div className="flex justify-between items-start">
+                                  <div className="truncate font-medium">
+                                    {contact.name}
+                                    {thread.isStarred && (
+                                      <Star className="inline h-3 w-3 ml-1 text-amber-500 fill-amber-500" />
+                                    )}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground whitespace-nowrap ml-2">
+                                    {thread.lastTimestamp}
+                                  </div>
+                                </div>
+                                
+                                <div className="truncate text-sm text-muted-foreground">
+                                  {thread.lastMessage}
+                                </div>
+                                
+                                <div className="flex items-center mt-1">
+                                  <Badge 
+                                    variant="outline" 
+                                    className="text-[10px] h-5 px-1.5 font-normal"
+                                  >
+                                    {contact.role === 'supplier' ? 'Proveedor' : 
+                                     contact.role === 'customer' ? 'Cliente' : 'Personal'}
+                                  </Badge>
+                                  
+                                  {thread.status === 'unread' && (
+                                    <Badge className="ml-1 h-2 w-2 rounded-full p-0 bg-blue-500" />
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        );
+                      })
+                    )}
+                  </AnimatePresence>
                 </div>
               </ScrollArea>
             </div>
             
-            {/* Messages */}
-            <div className={cn(
-              "flex flex-col md:col-span-8 lg:col-span-9",
-              !showContactsList ? "block" : "hidden md:flex"
-            )}>
-              {selectedContact ? (
+            {/* Message Detail */}
+            <div className="hidden md:flex flex-col w-2/3 lg:w-3/4 h-full">
+              {selectedThread ? (
                 <>
-                  {/* Header */}
-                  <div className="p-3 border-b flex justify-between items-center">
+                  <CardHeader className="border-b p-4 flex flex-row items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="md:hidden"
-                        onClick={() => setShowContactsList(true)}
-                      >
-                        <ChevronLeft className="h-5 w-5" />
-                      </Button>
                       <Avatar>
-                        <AvatarFallback className="bg-primary text-primary-foreground">
-                          {selectedContact.name.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
+                        <AvatarFallback>{getContactForThread(selectedThread).name.charAt(0)}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <h3 className="font-medium">
-                          {selectedContact.business_name || selectedContact.name}
-                        </h3>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Messages */}
-                  <div ref={messagesContainerRef} className="flex-1 p-4 overflow-y-auto">
-                    {messages.length === 0 ? (
-                      <div className="h-full flex flex-col justify-center items-center text-center">
-                        <div className="bg-muted w-16 h-16 rounded-full flex items-center justify-center mb-4">
-                          <MessageSquare className="h-8 w-8 text-muted-foreground" />
-                        </div>
-                        <h3 className="font-medium">Inicia una conversación</h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Envía un mensaje para comenzar a chatear
+                        <CardTitle className="text-lg">
+                          {getContactForThread(selectedThread).name}
+                        </CardTitle>
+                        <p className="text-xs text-muted-foreground">
+                          {getContactForThread(selectedThread).lastActive || "Desconectado"}
                         </p>
                       </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {messages.map((message, idx) => {
-                          const isOutgoing = message.sender_id === user?.id;
-                          const showDate = idx === 0 || 
-                            new Date(message.created_at).toDateString() !== 
-                            new Date(messages[idx - 1].created_at).toDateString();
-                            
-                          return (
-                            <React.Fragment key={message.id}>
-                              {showDate && (
-                                <div className="flex justify-center my-4">
-                                  <div className="bg-muted px-3 py-1 rounded-full text-xs text-center">
-                                    {format(new Date(message.created_at), 'd MMMM, yyyy', { locale: es })}
-                                  </div>
-                                </div>
-                              )}
-                              <div className={cn(
-                                "flex",
-                                isOutgoing ? "justify-end" : "justify-start"
-                              )}>
-                                <div className={cn(
-                                  "max-w-[75%] rounded-lg px-4 py-2",
-                                  isOutgoing 
-                                    ? "bg-primary text-primary-foreground" 
-                                    : "bg-accent"
-                                )}>
-                                  <div className="text-sm">{message.content}</div>
-                                  <div className={cn(
-                                    "flex items-center gap-1 text-xs mt-1",
-                                    isOutgoing 
-                                      ? "text-primary-foreground/70"
-                                      : "text-muted-foreground"
-                                  )}>
-                                    {formatMessageDate(message.created_at)}
-                                    {isOutgoing && (
-                                      <Check className={cn(
-                                        "h-3 w-3",
-                                        message.read ? "text-blue-400" : ""
-                                      )} />
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </React.Fragment>
-                          );
-                        })}
-                        <div ref={messageEndRef} />
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Input */}
-                  <div className="p-4 border-t">
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        handleSendMessage();
-                      }}
-                      className="flex gap-2"
-                    >
-                      <Input
-                        placeholder="Escribe un mensaje..."
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        className="flex-1"
-                        autoComplete="off"
-                      />
-                      <Button 
-                        type="submit" 
-                        size="icon" 
-                        disabled={!newMessage.trim() || isSending}
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleToggleStar(selectedThread.id)}
+                        className={`${selectedThread.isStarred ? 'text-amber-500' : ''}`}
                       >
-                        <Send className="h-4 w-4" />
+                        <Star className={`h-4 w-4 ${selectedThread.isStarred ? 'fill-amber-500' : ''}`} />
                       </Button>
-                    </form>
-                  </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleStatusChange(selectedThread.id, 
+                          selectedThread.status === 'archived' ? 'read' : 'archived'
+                        )}
+                      >
+                        <Archive className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  
+                  <ScrollArea className="flex-1 p-4">
+                    <div className="space-y-4">
+                      {selectedThread.messages.map((message) => (
+                        <motion.div
+                          key={message.id}
+                          className={`flex ${message.isFromMe ? 'justify-end' : 'justify-start'}`}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {!message.isFromMe && (
+                            <Avatar className="mr-2 mt-1">
+                              <AvatarFallback>{getContactForThread(selectedThread).name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                          )}
+                          
+                          <div className="max-w-[70%]">
+                            <div className={`p-3 rounded-lg ${
+                              message.isFromMe 
+                                ? 'bg-gastro text-white' 
+                                : 'bg-gray-100 dark:bg-slate-800'
+                            }`}>
+                              <p className="text-sm">{message.content}</p>
+                            </div>
+                            <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                              <span>{message.timestamp}</span>
+                              {message.isFromMe && (
+                                message.status === 'read' 
+                                  ? <CheckCheck className="h-3 w-3" /> 
+                                  : message.status === 'delivered' 
+                                    ? <CheckCheck className="h-3 w-3" />
+                                    : <Clock className="h-3 w-3" />
+                              )}
+                            </div>
+                          </div>
+                          
+                          {message.isFromMe && (
+                            <Avatar className="ml-2 mt-1">
+                              <AvatarImage src="/placeholder.svg" />
+                              <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
+                            </Avatar>
+                          )}
+                        </motion.div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                  
+                  <CardContent className="p-4 border-t">
+                    <div className="flex gap-2">
+                      <Input 
+                        placeholder="Escribe un mensaje..." 
+                        value={messageText}
+                        onChange={(e) => setMessageText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage();
+                          }
+                        }}
+                      />
+                      <Button onClick={handleSendMessage} disabled={!messageText.trim()}>
+                        <Send className="h-4 w-4 mr-1" />
+                        Enviar
+                      </Button>
+                    </div>
+                  </CardContent>
                 </>
               ) : (
-                <div className="h-full flex flex-col justify-center items-center text-center p-4">
-                  <div className="bg-muted w-16 h-16 rounded-full flex items-center justify-center mb-4">
-                    <MessageSquare className="h-8 w-8 text-muted-foreground" />
+                <div className="flex flex-col items-center justify-center h-full">
+                  <div className="rounded-full bg-muted p-6 mb-4">
+                    <Inbox className="h-10 w-10 text-muted-foreground" />
                   </div>
-                  <h3 className="text-xl font-medium">No hay conversación seleccionada</h3>
-                  <p className="text-muted-foreground mt-2 max-w-md">
-                    Selecciona un contacto para ver sus mensajes o iniciar una nueva conversación
+                  <h2 className="text-xl font-medium mb-2">No hay mensajes seleccionados</h2>
+                  <p className="text-center text-muted-foreground max-w-sm">
+                    Selecciona una conversación de la lista para ver sus mensajes o inicia una nueva conversación.
                   </p>
                 </div>
               )}
@@ -572,24 +499,5 @@ const Messages = () => {
     </DashboardLayout>
   );
 };
-
-export function MessageSquare(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-    </svg>
-  );
-}
 
 export default Messages;

@@ -1,92 +1,81 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { BusinessDashboard } from "@/components/dashboard/BusinessDashboard";
 import { ProviderDashboard } from "@/components/dashboard/ProviderDashboard";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { DemoBanner } from "@/components/dashboard/DemoBanner";
-import { QuickActions } from "@/components/dashboard/QuickActions";
-import { OrdersTable } from "@/components/dashboard/OrdersTable";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 
 const Demo = () => {
-  const [demoType, setDemoType] = useState<'business' | 'provider'>('business');
-  const [businessName, setBusinessName] = useState('Restaurante Demo');
-  const [loaded, setLoaded] = useState(false);
+  const [userType, setUserType] = useState<"business" | "provider">("business");
+  const [businessName, setBusinessName] = useState("Mi Restaurante");
 
-  useEffect(() => {
-    // Check if we have a type specified in URL params
-    const urlParams = new URLSearchParams(window.location.search);
-    const type = urlParams.get('type') as 'business' | 'provider';
-    
-    if (type === 'provider') {
-      setDemoType('provider');
-      setBusinessName('Proveedor Demo');
-    } else {
-      setDemoType('business');
-      setBusinessName('Restaurante Demo');
-    }
-    
-    // Add a small delay to allow for animation
-    setTimeout(() => setLoaded(true), 100);
-  }, []);
+  const toggleUserType = () => {
+    setUserType(userType === "business" ? "provider" : "business");
+  };
 
-  const handleToggleView = () => {
-    const newType = demoType === 'business' ? 'provider' : 'business';
-    setDemoType(newType);
-    setBusinessName(newType === 'business' ? 'Restaurante Demo' : 'Proveedor Demo');
-    
-    // Update URL without reloading the page
-    const url = new URL(window.location.href);
-    url.searchParams.set('type', newType);
-    window.history.pushState({}, '', url);
+  const fadeInUp = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+      },
+    },
   };
 
   return (
     <DashboardLayout>
-      <AnimatePresence mode="wait">
-        <motion.div 
-          className="space-y-6"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: loaded ? 1 : 0, y: loaded ? 0 : 10 }}
-          transition={{ duration: 0.3 }}
+      <DemoBanner />
+      <div className="flex flex-col gap-4 md:gap-6 lg:gap-8">
+        <motion.div
+          className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700 p-4 rounded-lg"
+          initial="hidden"
+          animate="visible"
+          variants={fadeInUp}
         >
-          <DemoBanner demoType={demoType} onToggleView={handleToggleView} />
-
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={demoType}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
+          <div>
+            <h2 className="text-xl font-bold mb-1">
+              Demo de {userType === "business" ? "Restaurante" : "Proveedor"}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Explora todas las funcionalidades sin necesidad de crear una cuenta
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Select
+              value={userType}
+              onValueChange={(value) => setUserType(value as "business" | "provider")}
             >
-              {demoType === 'business' ? (
-                <BusinessDashboard businessName={businessName} />
-              ) : (
-                <ProviderDashboard businessName={businessName} />
-              )}
-            </motion.div>
-          </AnimatePresence>
-
-          {/* Quick Actions */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
-          >
-            <QuickActions userType={demoType} />
-          </motion.div>
-
-          <motion.div 
-            className="mt-8 pt-2"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.3 }}
-          >
-            <OrdersTable isDemoMode={true} />
-          </motion.div>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Selecciona tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="business">Vista Restaurante</SelectItem>
+                <SelectItem value="provider">Vista Proveedor</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button onClick={toggleUserType}>
+              Cambiar a {userType === "business" ? "Proveedor" : "Restaurante"}
+            </Button>
+          </div>
         </motion.div>
-      </AnimatePresence>
+
+        {userType === "business" ? (
+          <BusinessDashboard businessName={businessName} />
+        ) : (
+          <ProviderDashboard />
+        )}
+      </div>
     </DashboardLayout>
   );
 };

@@ -7,15 +7,31 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/use-toast";
 import { Plus, Users, Clock, Utensils, Receipt, CreditCard, MoreHorizontal } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
+// Define table types
+type TableOrder = {
+  items: number;
+  total: number;
+};
+
+type TableData = {
+  id: number;
+  name: string;
+  status: string;
+  capacity: number;
+  time?: string;
+  order?: TableOrder;
+  customer?: string;
+};
+
 // Demo data
-const DEMO_TABLES = [
+const DEMO_TABLES: TableData[] = [
   { id: 1, name: 'Mesa 1', status: 'occupied', capacity: 4, time: '19:30', order: { items: 4, total: 3450 } },
   { id: 2, name: 'Mesa 2', status: 'available', capacity: 2 },
   { id: 3, name: 'Mesa 3', status: 'reserved', capacity: 6, time: '20:00', customer: 'Martinez' },
@@ -66,8 +82,13 @@ const getTableActions = (status: string) => {
   return actions;
 };
 
-const TableItem: React.FC<{ table: any, onTableAction: (table: any, action: string) => void }> = ({ table, onTableAction }) => {
-  const status = TABLE_STATUS[table.status] || TABLE_STATUS.available;
+interface TableItemProps {
+  table: TableData;
+  onTableAction: (table: TableData, action: string) => void;
+}
+
+const TableItem: React.FC<TableItemProps> = ({ table, onTableAction }) => {
+  const status = TABLE_STATUS[table.status as keyof typeof TABLE_STATUS] || TABLE_STATUS.available;
 
   return (
     <motion.div
@@ -141,12 +162,12 @@ const TableItem: React.FC<{ table: any, onTableAction: (table: any, action: stri
 };
 
 export const TablesGrid: React.FC = () => {
-  const [tables, setTables] = useState(DEMO_TABLES);
-  const [selectedTable, setSelectedTable] = useState<any>(null);
+  const [tables, setTables] = useState<TableData[]>(DEMO_TABLES);
+  const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
   const [isNewOrderSheetOpen, setIsNewOrderSheetOpen] = useState(false);
   const [view, setView] = useState<'all' | 'available' | 'occupied' | 'reserved'>('all');
   
-  const handleTableAction = (table: any, action: string) => {
+  const handleTableAction = (table: TableData, action: string) => {
     setSelectedTable(table);
     
     // Demo implementation of table actions
@@ -173,21 +194,21 @@ export const TablesGrid: React.FC = () => {
     } 
     else if (action === 'pay') {
       const updatedTables = tables.map(t => 
-        t.id === table.id ? { ...t, status: 'cleaning', time: null, order: null } : t
+        t.id === table.id ? { ...t, status: 'cleaning', time: undefined, order: undefined } : t
       );
       setTables(updatedTables);
       toast({ title: `${table.name} pagada y pendiente de limpieza` });
     } 
     else if (action === 'free' || action === 'available') {
       const updatedTables = tables.map(t => 
-        t.id === table.id ? { ...t, status: 'available', time: null, order: null, customer: null } : t
+        t.id === table.id ? { ...t, status: 'available', time: undefined, order: undefined, customer: undefined } : t
       );
       setTables(updatedTables);
       toast({ title: `${table.name} disponible` });
     } 
     else if (action === 'cancel') {
       const updatedTables = tables.map(t => 
-        t.id === table.id ? { ...t, status: 'available', time: null, customer: null } : t
+        t.id === table.id ? { ...t, status: 'available', time: undefined, customer: undefined } : t
       );
       setTables(updatedTables);
       toast({ title: `Reserva cancelada para ${table.name}` });
