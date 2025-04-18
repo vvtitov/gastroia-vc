@@ -21,6 +21,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useUserType } from "@/contexts/UserTypeContext";
 
 interface SidebarLinkProps {
   to: string;
@@ -86,7 +87,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
   const location = useLocation();
   const pathname = location.pathname;
   const { user, signOut } = useAuth();
-  const [userType, setUserType] = useState<string>('business');
+  const { userType } = useUserType();
   const [isDemo, setIsDemo] = useState(false);
   const [demoType, setDemoType] = useState<string>('business');
 
@@ -100,14 +101,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
       setIsDemo(true);
       const type = urlParams.get('type');
       setDemoType(type || 'business');
-      setUserType(type || 'business');
       return;
     }
 
     // Si no es demo, usamos el tipo de usuario normal
     setIsDemo(false);
-    setUserType('business'); // Default value, should be updated with user data
-  }, [location.search, pathname, user]);
+  }, [location.search, pathname]);
 
   // Determine if a link is active
   const isLinkActive = (path: string) => {
@@ -157,7 +156,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
             demoType={demoType}
           />
 
-          {userType === 'business' && (
+          {(isDemo ? demoType : userType) === 'business' && (
             <>
               <SidebarSection title="Operaciones">
                 <SidebarLink
@@ -230,7 +229,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
             </>
           )}
 
-          {userType === 'provider' && (
+          {(isDemo ? demoType : userType) === 'provider' && (
             <>
               <SidebarSection title="Gestión">
                 <SidebarLink

@@ -15,7 +15,7 @@ export const BusinessDashboard: React.FC<BusinessDashboardProps> = ({ businessNa
   const isMobile = useIsMobile();
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mt-6">
       <h1 className="text-2xl sm:text-3xl font-bold">
         Bienvenido a {businessName}
       </h1>

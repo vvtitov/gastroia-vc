@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/hooks/use-auth';
 import { useLocation } from 'react-router-dom';
+import { BusinessSwitcher } from './BusinessSwitcher';
 
 const TopNavbar = () => {
   const { user, signOut } = useAuth();
@@ -12,8 +13,9 @@ const TopNavbar = () => {
 
   return (
     <div className="bg-white border-b py-2 px-6 flex justify-between items-center">
-      <div className="flex items-center">
+      <div className="flex items-center gap-4">
         <h2 className="text-lg font-medium text-gastro-text">GastroIA</h2>
+        {user && <BusinessSwitcher />}
       </div>
       <div>
         {isDemo ? (

@@ -8,25 +8,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { DashboardLoading } from "@/components/dashboard/DashboardLoading";
 import { BusinessDashboard } from "@/components/dashboard/BusinessDashboard";
 import { ProviderDashboard } from "@/components/dashboard/ProviderDashboard";
-import { DemoBanner } from "@/components/dashboard/DemoBanner";
+import { useUserType } from "@/contexts/UserTypeContext";
+import { useLocation } from "react-router-dom";
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { userType } = useUserType();
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDemoView, setIsDemoView] = useState(false);
-  const [demoType, setDemoType] = useState<'business' | 'provider'>('business');
+  const location = useLocation();
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const demo = urlParams.get('demo');
-    if (demo === 'true') {
-      setIsDemoView(true);
-      const type = urlParams.get('type') as 'business' | 'provider';
-      setDemoType(type || 'business');
-      setIsLoading(false);
-      return;
-    }
 
     const fetchProfile = async () => {
       if (!user) return;
@@ -50,11 +42,8 @@ const Dashboard = () => {
     fetchProfile();
   }, [user]);
   
-  const userType = isDemoView ? demoType : (profile?.user_type || 'business');
-  const businessName = isDemoView 
-    ? userType === 'business' ? 'Restaurante Demo' : 'Proveedor Demo' 
-    : (profile?.business_name || 'GastroIA');
-  
+  const businessName = profile?.business_name || 'GastroIA';
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -63,10 +52,11 @@ const Dashboard = () => {
     );
   }
 
+  // Type change handling is now in TopNavbar
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {isDemoView && <DemoBanner demoType={demoType} />}
 
         {userType === 'business' ? (
           <BusinessDashboard businessName={businessName} />

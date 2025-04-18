@@ -1,11 +1,10 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Bot } from "lucide-react";
 
 const Hero = () => {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   return (
     <div className="grid lg:grid-cols-2 gap-12 items-center py-12">
@@ -23,25 +22,16 @@ const Hero = () => {
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
-          <div className="relative">
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="border-white text-white hover:bg-white/20 w-full sm:w-auto bg-blue-500"
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-            >
-              Ver demo
-            </Button>
-            {dropdownOpen && (
-              <div className="absolute mt-2 w-auto bg-white rounded-md shadow-lg z-10">
-                <Link to="/demo?type=business" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                  Demo Negocio
-                </Link>
-                <Link to="/demo?type=provider" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                  Demo Proveedor
-                </Link>
-              </div>
-            )}
+          <div>
+            <Link to="/demo?type=business&demo=true">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="border-white text-white hover:bg-white/20 w-full sm:w-auto bg-blue-500"
+              >
+                Ver demo
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
