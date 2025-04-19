@@ -16,7 +16,10 @@ import {
   CreditCard,
   ShoppingBag,
   Layers,
-  Utensils
+  Utensils,
+  Truck,
+  FileText,
+  Building2
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
@@ -92,7 +95,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
   const [demoType, setDemoType] = useState<string>('business');
 
   useEffect(() => {
-    // Check if we're in the demo page or using demo parameters
     const isDemoPage = pathname === '/demo';
     const urlParams = new URLSearchParams(location.search);
     const demo = urlParams.get('demo');
@@ -103,12 +105,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
       setDemoType(type || 'business');
       return;
     }
-
-    // Si no es demo, usamos el tipo de usuario normal
     setIsDemo(false);
   }, [location.search, pathname]);
 
-  // Determine if a link is active
   const isLinkActive = (path: string) => {
     if (pathname === '/demo' && path === '/dashboard') {
       return true;
@@ -127,7 +126,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
 
       {/* Sidebar */}
       <motion.aside
-        className={`fixed z-50 top-0 left-0 h-full w-64 bg-sidebar transform transition-all duration-300 ease-in-out flex flex-col ${open ? 'translate-x-0' : '-translate-x-full'} md:static md:flex md:translate-x-0 ${open ? '' : 'hidden'} md:block`}
+        className={cn(
+          "fixed z-50 top-0 left-0 h-full w-64 transform transition-all duration-300 ease-in-out flex flex-col",
+          (isDemo ? demoType : userType) === 'provider' 
+            ? "bg-blue-50 dark:bg-blue-900" 
+            : "bg-sidebar",
+          open ? 'translate-x-0' : '-translate-x-full',
+          'md:static md:flex md:translate-x-0',
+          open ? '' : 'hidden',
+          'md:block'
+        )}
         onClick={e => e.stopPropagation()}
         initial={false}
         animate={{ 
@@ -138,8 +146,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
       >
         <div className="p-4">
           <div className="flex items-center gap-2 px-2">
-            <div className="w-8 h-8 rounded-md flex items-center justify-center bg-white">
-              <span className="text-gastro font-bold text-lg">G</span>
+            <div className={cn(
+              "w-8 h-8 rounded-md flex items-center justify-center",
+              (isDemo ? demoType : userType) === 'provider' 
+                ? "bg-blue-100" 
+                : "bg-white"
+            )}>
+              <span className={cn(
+                "font-bold text-lg",
+                (isDemo ? demoType : userType) === 'provider' 
+                  ? "text-blue-600" 
+                  : "text-gastro"
+              )}>G</span>
             </div>
             <h1 className="text-white font-bold text-xl">GastroIA</h1>
           </div>
@@ -156,6 +174,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
             demoType={demoType}
           />
 
+          {/* Render Business Menu Items */}
           {(isDemo ? demoType : userType) === 'business' && (
             <>
               <SidebarSection title="Operaciones">
@@ -229,6 +248,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
             </>
           )}
 
+          {/* Render Provider Menu Items */}
           {(isDemo ? demoType : userType) === 'provider' && (
             <>
               <SidebarSection title="Gestión">
@@ -251,10 +271,40 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
                   demoType={demoType}
                 />
                 <SidebarLink
+                  to="/logistics"
+                  icon={<Truck size={20} />}
+                  label="Logística"
+                  isActive={isLinkActive("/logistics")}
+                  setOpen={setOpen}
+                  isDemo={isDemo}
+                  demoType={demoType}
+                />
+                <SidebarLink
+                  to="/clients"
+                  icon={<Building2 size={20} />}
+                  label="Clientes"
+                  isActive={isLinkActive("/clients")}
+                  setOpen={setOpen}
+                  isDemo={isDemo}
+                  demoType={demoType}
+                />
+                <SidebarLink
                   to="/business"
                   icon={<Store size={20} />}
                   label="Mi Empresa"
                   isActive={isLinkActive("/business")}
+                  setOpen={setOpen}
+                  isDemo={isDemo}
+                  demoType={demoType}
+                />
+              </SidebarSection>
+
+              <SidebarSection title="Documentos">
+                <SidebarLink
+                  to="/invoices"
+                  icon={<FileText size={20} />}
+                  label="Facturación"
+                  isActive={isLinkActive("/invoices")}
                   setOpen={setOpen}
                   isDemo={isDemo}
                   demoType={demoType}
@@ -330,3 +380,4 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
     </>
   );
 };
+
